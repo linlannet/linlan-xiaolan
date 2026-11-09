@@ -1,0 +1,13 @@
+import api from '@/utils/request.uts';
+import type { PlatformStatus } from '@/api/types/platform.d.uts';
+
+/**
+ * 获取平台当前监控状态
+ * @returns 平台状态信息
+ */
+export const getPlatformStatus = () => {
+  return api.get<PlatformStatus>('/api/stage/getStatus', {}, {
+    showLoading: true,
+    loadingText: '获取状态中...'
+  });
+};

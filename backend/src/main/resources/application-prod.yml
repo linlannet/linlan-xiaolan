@@ -1,0 +1,162 @@
+# 开发环境配置
+server:
+    # 服务器的HTTP端口，默认为8310
+    port: 8310
+    servlet:
+        # 应用的访问路径
+        context-path: /xiaolan_backend
+    tomcat:
+        # tomcat的URI编码
+        uri-encoding: UTF-8
+        # 连接数满后的排队数，默认为100
+        accept-count: 1000
+        threads:
+            # tomcat最大线程数，默认为200
+            max: 800
+            # Tomcat启动初始化的线程数，默认值10
+            min-spare: 100
+
+# 日志配置
+logging:
+    level:
+        net.linlan: debug
+        org.springframework: warn
+
+# 数据源配置
+spring:
+    datasource:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driverClassName: com.mysql.cj.jdbc.Driver
+        druid:
+            first: #数据源1-产品数据源
+                url: ENC(T637uwfs1ErANzmCILgM/QQib3S9LcE6Zi9JSf6MOg8s1M9o+GWEanVAIP10unjlpfhNp+i83wh2m4MdvFVL18zbC2PHWanMMvN2CXs/7fc/26FGw0L9FqRjhHNCHuuKrUsBxIGBOkpYHvD3px/VuuPYUiPUEIyUfTCycC7T9V6U4q0dws4uGSuRq6//t6E78HUeZzdlOGBurJ2nWUmh1C/h3dwLzWbVbVOiq7w8cn9g8RuveISrcldHCrNteO7rCoqxWaBwEzhhykoRdxSl1w==)
+                username: ENC(ouvQZjGPg3BrEKz9zMGC9Q==)
+                password: ENC(IXQYPaguocSjtqiSTSpH1zSzHUC53ixk)
+            h2: #数据源-H2本地数据库
+                url: jdbc:h2:~/H2Data/lldb;AUTO_SERVER=TRUE;LOG=0;UNDO_LOG=0
+                username: sa
+                password:
+            second: #数据源2-业务主要数据库
+                url: ENC(do08BlLFZBrzaXva5RUHSq4ZL/NekXUwq38EcoYBVAggfm4yACqTMCGkPzMcwZFZKg4psy3Uv6hRSFDp3Sdz2d+uCT3JAyfNajiMB8i7FjBL9NuCzE/WH7lGpGZ8znHSS9ztxTHMfO/5zgdc0SlUCkuPD+6vNb+Fxzli6YPZMkTVlEuYscBclECIyPQf601dzqseVa7nLTnKASDVVju9J9/rsew6y4rqVK5V4b9ce/2K/cOpAsXbz4vhBCBmrvO2q9exxkGhzra6v8+fMEb217X71Jpi9IeA)
+                username: ENC(ouvQZjGPg3BrEKz9zMGC9Q==)
+                password: ENC(IXQYPaguocSjtqiSTSpH1zSzHUC53ixk)
+
+            # 初始连接数
+            initialSize: 5
+            # 最小连接池数量
+            minIdle: 10
+            # 最大连接池数量
+            maxActive: 20
+            # 配置获取连接等待超时的时间
+            maxWait: 60000
+            # 配置连接超时时间
+            connectTimeout: 30000
+            # 配置网络超时时间
+            socketTimeout: 60000
+            # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+            timeBetweenEvictionRunsMillis: 60000
+            # 配置一个连接在池中最小生存的时间，单位是毫秒
+            minEvictableIdleTimeMillis: 300000
+            # 配置一个连接在池中最大生存的时间，单位是毫秒
+            maxEvictableIdleTimeMillis: 900000
+            # 配置检测连接是否有效
+            validationQuery: SELECT 1 FROM DUAL
+            testWhileIdle: true
+            testOnBorrow: false
+            testOnReturn: false
+            webStatFilter:
+                enabled: true
+            statViewServlet:
+                enabled: true
+                # 设置白名单，不填则允许所有访问
+                allow:
+                url-pattern: /druid/*
+                # 控制台管理用户名和密码
+                login-username: admin
+                login-password: 123456
+            filter:
+                stat:
+                    enabled: true
+                    # 慢SQL记录
+                    log-slow-sql: true
+                    slow-sql-millis: 1000
+                    merge-sql: true
+                wall:
+                    config:
+                        multi-statement-allow: true
+    data:
+        # redis 配置
+        redis:
+            # 地址
+            host: ENC(df1M3OmDA21KmFdxIqvNGMTY3bqplsOS)
+            # 端口，默认为6379
+            port: 6379
+            # 数据库索引
+            database: 3
+            # 密码
+            password:
+            # 连接超时时间
+            timeout: 10s
+            lettuce:
+                pool:
+                    # 连接池中的最小空闲连接
+                    min-idle: 0
+                    # 连接池中的最大空闲连接
+                    max-idle: 8
+                    # 连接池的最大数据库连接数
+                    max-active: 8
+                    # #连接池最大阻塞等待时间（使用负值表示没有限制）
+                    max-wait: -1ms
+# 文件路径配置
+platform:
+    file:
+        dir: /data/files/xiaolan
+    prop:
+        allowedOrigins: "*"
+    database:
+        db_encrypt: true        #数据库敏感信息是否加密
+        db_key: Linlan_@!DB_Key        #数据库敏感字段加密值
+        db_key_out: lldb_string_out        #数据库敏感字段对外提供加密值
+    backend:
+        encrypt: false      #前后端交互是否加密
+        rsa:
+            # 前后端交互RSA2048公钥、私钥配置
+            public_key: ENC(VBVHAkQVAx0y/jpR0b9G79/S8vrg9zL2aiMhtkZBTyqCCsGljoOWy9ogW4avdxAOMeiyACQZhaAyAFdKhNrCPdS8GCcDro8wrvZtCPvuPWqaFTtGVN46q7ReOW64W04F52FgIC2i6lRxbZ1UUMR9BQ==)
+            private_key: ENC(U9OsPA5ktIK0pKoWxVnbIVd/fx7NhpNxG7MsNQuJRnkle5pGmoAz5BQlgKh096dllzldp48Ytyri16b8z3OLr6lAy4B5/fpy75PB9l18+uCBumsw4ZU1uAX5tzeRXjSQugc64Huc65L4EK0GtDq3fJuBU/0H73MXmp4r2u0uEE5iFMtGYG0WVdSpOPSNNHtMlq0CrnyJ+2o4g7y5FRH9pxY8DB0Qm3h/kMnPEuzf/I7l+w/y524pZBsx9a0nxowMruPSUvlj0cj5PfE1D2mkOSsW0eGigf5C+Oda8PfxsaYI388g55FjBGRUBqlTNz8H8XAU7FMgyrMTE87q8Fcy2ckM8MS/w/0qYI+cc7raZYbQ0z1dUxqn4ICz9KrJB7OcAJ94LtzUx4BYlOuJBu8r7PHRiOYak3N66mN4fHjGS44WBhfL/fmZ2s8Bya3ZAvmMDltbyvWZljJIyWtWicKXywuamtNxODow90QZd1oJFeEDc7j9zC3KgA4JTkqP24u+9IfKFd6Pg8QDCO68XTuNfQ==)
+# 微信配置
+wx:
+    # 小程序
+    miniapp:
+        appid: wxfaf5d03296e74036 #微信小程序的appid 小览生活
+        secret: f1ce2c01f9b4aa787449abccc97bdf05    #微信小程序的Secret 小览生活
+        token: token_linlan_wxmp #微信小程序消息服务器配置的token
+        aesKey:      #微信小程序消息服务器配置的EncodingAESKey
+        msgDataFormat: JSON
+        config-storage:
+            type: RedisTemplate # 配置类型: Memory(默认), Jedis, RedisTemplate
+            key-prefix: 'xiaolan:mini' # 相关redis前缀配置: wa(默认)
+    # 公众号
+    mp:
+        appId: wx73ccdb9f252af883   #微信服务号 麟览
+        secret: e61c2bf3cde3cb0ba5f163bcceed49e3
+        token: token_linlan_wxmp
+        aesKey: UfovGwsyxys4ddOsSB7tgSHyWw3LIppYdwRboqFgmKM
+        config-storage:
+            type: RedisTemplate # 配置类型: Memory(默认), Jedis, RedisTemplate
+            key-prefix: 'xiaolan:mp' # 相关redis前缀配置: wx(默认)
+        hosts:
+            api-host: https://linlan.net/
+    # 支付
+    pay:
+        appId:
+        mchId:
+        mchKey:
+        keyPath: classpath:cert/apiclient_cert.p12 # p12证书的位置，可以指定绝对路径，也可以指定类路径（以classpath:开头）
+    login:
+        # 域名配置
+        api_host_url: https://linlan.net/
+        mini_program_state: 'release' # 小程序码跳转小程序类型
+
+jasypt:
+    encryptor:
+        password: Ll2023!Backend_Prod

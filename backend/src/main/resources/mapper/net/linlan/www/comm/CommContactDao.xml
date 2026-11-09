@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    xiaolan-backend - 小览生活服务端
+    Copyright © 2020-2025 Linlan (open@linlan.net)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.linlan.www.comm.dao.CommContactDao">
+
+    <resultMap id="BaseResultMap" type="net.linlan.www.comm.entity.CommContact">
+        <id column="ID" property="id" />
+        <result column="NAME" property="name" />
+        <result column="PHONE" property="phone" />
+        <result column="EMAIL" property="email" />
+        <result column="COMPANY" property="company" />
+        <result column="CONTENT" property="content" />
+        <result column="STATUS" property="status" />
+        <result column="REMARK" property="remark" />
+        <result column="DEL_FLAG" property="delFlag" />
+        <result column="CREATE_TIME" property="createTime" />
+        <result column="UPDATE_TIME" property="updateTime" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        ID, NAME, PHONE, EMAIL, COMPANY, CONTENT, STATUS, REMARK, DEL_FLAG, CREATE_TIME, UPDATE_TIME
+    </sql>
+
+    <select id="getList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM COMM_CONTACT
+        WHERE DEL_FLAG = 0
+        <if test="name != null and name != ''">
+            AND NAME LIKE CONCAT('%', #{name}, '%')
+        </if>
+        <if test="phone != null and phone != ''">
+            AND PHONE LIKE CONCAT('%', #{phone}, '%')
+        </if>
+        <if test="status != null">
+            AND STATUS = #{status}
+        </if>
+        ORDER BY CREATE_TIME DESC
+    </select>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM COMM_CONTACT
+        WHERE ID = #{id} AND DEL_FLAG = 0
+    </select>
+
+    <insert id="save" parameterType="net.linlan.www.comm.entity.CommContact" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO COMM_CONTACT (NAME, PHONE, EMAIL, COMPANY, CONTENT, STATUS, REMARK, DEL_FLAG, CREATE_TIME, UPDATE_TIME)
+        VALUES (#{name}, #{phone}, #{email}, #{company}, #{content}, #{status}, #{remark}, 0, NOW(), NOW())
+    </insert>
+
+    <update id="update" parameterType="net.linlan.www.comm.entity.CommContact">
+        UPDATE COMM_CONTACT
+        <set>
+            <if test="name != null">NAME = #{name},</if>
+            <if test="phone != null">PHONE = #{phone},</if>
+            <if test="email != null">EMAIL = #{email},</if>
+            <if test="company != null">COMPANY = #{company},</if>
+            <if test="content != null">CONTENT = #{content},</if>
+            <if test="status != null">STATUS = #{status},</if>
+            <if test="remark != null">REMARK = #{remark},</if>
+            UPDATE_TIME = NOW()
+        </set>
+        WHERE ID = #{id}
+    </update>
+
+    <delete id="deleteById">
+        UPDATE COMM_CONTACT SET DEL_FLAG = 1 WHERE ID = #{id}
+    </delete>
+
+    <delete id="deleteByIds">
+        UPDATE COMM_CONTACT SET DEL_FLAG = 1 WHERE ID IN
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="getCount" resultType="int">
+        SELECT COUNT(*) FROM COMM_CONTACT WHERE DEL_FLAG = 0
+        <if test="name != null and name != ''">
+            AND NAME LIKE CONCAT('%', #{name}, '%')
+        </if>
+    </select>
+
+</mapper>

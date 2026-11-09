@@ -1,0 +1,25 @@
+import api from '@/utils/request.uts';
+import type { WxLoginResult } from '@/api/types/wxmini.d.uts';
+
+/**
+ * 获取微信扫码登录验证码
+ * @returns 验证码结果
+ */
+export const getWxLoginCode = () => {
+  return api.get<string>('/api/open/wxmini/getCode', {}, {
+    showLoading: false,
+    toastError: false
+  });
+};
+
+/**
+ * 检查微信扫码登录状态
+ * @param loginCode 登录验证码
+ * @returns 登录状态及用户信息
+ */
+export const checkWxLoginStatus = (loginCode: string) => {
+  return api.get<WxLoginResult>(`/api/open/wxmini/isLogin/${loginCode}`, {}, {
+    showLoading: true,
+    loadingText: '登录中...'
+  });
+};

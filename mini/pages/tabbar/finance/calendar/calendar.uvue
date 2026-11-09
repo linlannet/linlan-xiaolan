@@ -1,0 +1,303 @@
+<template>
+  <view class="page">
+    <fui-status-bar title="日历记账" :isBack="true"></fui-status-bar>
+    
+    <!-- 日历导航 -->
+    <view class="calendar-nav">
+      <fui-button type="text" @click="prevMonth"><fui-icon name="left"></fui-icon></fui-button>
+      <text class="current-date">{{ currentYear }}年{{ currentMonth + 1 }}月</text>
+      <fui-button type="text" @click="nextMonth"><fui-icon name="right"></fui-icon></fui-button>
+    </view>
+    
+    <!-- 星期标题 -->
+    <view class="week-title">
+      <view class="week-day" v-for="day in weekDays" :key="day">{{ day }}</view>
+    </view>
+    
+    <!-- 日历网格 -->
+    <view class="calendar-grid">
+      <view class="calendar-row" v-for="(week, index) in calendarWeeks" :key="index">
+        <view
+          class="calendar-day"
+          v-for="(day, dayIndex) in week"
+          :key="dayIndex"
+          :class="{ 'empty': !day.date, 'today': isToday(day), 'has-record': hasRecord(day) }"
+          @click="selectDate(day)"
+        >
+          <text class="day-text">{{ day.date ? day.date : '' }}</text>
+          <view class="record-indicator" v-if="hasRecord(day)"></view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 今日记录列表 -->
+    <view class="records-container" v-if="selectedDateRecords.length > 0">
+      <text class="records-title">{{ selectedDate }} 记录</text>
+      <fui-list>
+        <fui-list-cell
+          v-for="record in selectedDateRecords"
+          :key="record.id"
+          :title="record.categoryName"
+          :value="(record.type === 'expense' ? '-' : '+') + record.amount.toFixed(2)"
+          :valueClass="record.type === 'expense' ? 'expense' : 'income'"
+          @click="gotoDetail(record.id)"
+        ></fui-list-cell>
+      </fui-list>
+    </view>
+    
+    <!-- 添加记录按钮 -->
+  </view>
+</template>
+
+<script lang="uts">
+  import { ref, computed, onMounted, reactive } from 'vue'
+  import { state } from '@/store'
+  import { formatDate, getMonthFirstDay, getMonthLastDay } from '@/common/utils'
+  export default {
+    setup() {
+      // Removed useStore call - using direct state import
+      const currentDate = new Date()
+      const currentYear = ref(currentDate.getFullYear())
+      const currentMonth = ref(currentDate.getMonth())
+      const calendarWeeks = ref([])
+      const selectedDate = ref(formatDate(currentDate, 'yyyy-MM-dd'))
+      const weekDays = ['日', '一', '二', '三', '四', '五', '六']
+
+      // 生成日历
+      const generateCalendar = () => {
+        const firstDay = getMonthFirstDay()
+        firstDay.setFullYear(currentYear.value)
+        firstDay.setMonth(currentMonth.value)
+        
+        const lastDay = getMonthLastDay()
+        lastDay.setFullYear(currentYear.value)
+        lastDay.setMonth(currentMonth.value)
+        
+        const daysInMonth = lastDay.getDate()
+        const firstDayOfWeek = firstDay.getDay()
+        
+        const weeks = []
+        let currentWeek = []
+        
+        // 填充月初空白
+        for (let i = 0; i < firstDayOfWeek; i++) {
+          currentWeek.push({ date: null })
+        }
+        
+        // 填充当月日期
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dateStr = formatDate(new Date(currentYear.value, currentMonth.value, day), 'yyyy-MM-dd')
+          currentWeek.push({ date: day, dateStr })
+          
+          if (currentWeek.length === 7) {
+            weeks.push(currentWeek)
+            currentWeek = []
+          }
+        }
+        
+        // 填充月末空白
+        if (currentWeek.length > 0) {
+          while (currentWeek.length < 7) {
+            currentWeek.push({ date: null })
+          }
+          weeks.push(currentWeek)
+        }
+        
+        calendarWeeks.value = weeks
+      }
+
+      // 检查是否为今天
+      const isToday = (day) => {
+        if (!day.date) return false
+        const today = new Date()
+        return (
+          day.date === today.getDate() &&
+          currentMonth.value === today.getMonth() &&
+          currentYear.value === today.getFullYear()
+        )
+      }
+
+      // 检查某天是否有记录
+      const hasRecord = (day) => {
+        if (!day.dateStr) return false
+        return store.records.some(r => r.date === day.dateStr)
+      }
+
+      // 获取选中日期的记录
+      const selectedDateRecords = computed(() => {
+        return store.records
+          .filter(r => r.date === selectedDate.value)
+          .map(record => {
+            const category = store.categories.find(c => c.id === record.categoryId)
+            return {
+              ...record,
+              categoryName: category ? category.name : '未知'
+            }
+          })
+      })
+
+      // 选择日期
+      const selectDate = (day) => {
+        if (day.dateStr) {
+          selectedDate.value = day.dateStr
+        }
+      }
+
+      // 切换到上个月
+      const prevMonth = () => {
+        currentMonth.value--
+        if (currentMonth.value < 0) {
+          currentMonth.value = 11
+          currentYear.value--
+        }
+        generateCalendar()
+      }
+
+      // 切换到下个月
+      const nextMonth = () => {
+        currentMonth.value++
+        if (currentMonth.value > 11) {
+          currentMonth.value = 0
+          currentYear.value++
+        }
+        generateCalendar()
+      }
+
+      // 前往记录详情
+      const gotoDetail = (id) => {
+        uni.navigateTo({
+          url: `/pages/tabbar/finance/detail?id=${id}`
+        })
+      }
+
+      // 前往添加记录
+      const gotoAddRecord = () => {
+        uni.navigateTo({
+          url: `/pages/tabbar/finance/add-record?date=${selectedDate.value}`
+        })
+      }
+
+      onMounted(() => {
+        generateCalendar()
+      })
+
+      return {
+        currentYear,
+        currentMonth,
+        calendarWeeks,
+        weekDays,
+        selectedDate,
+        selectedDateRecords,
+        generateCalendar,
+        isToday,
+        hasRecord,
+        selectDate,
+        prevMonth,
+        nextMonth,
+        gotoDetail,
+        gotoAddRecord
+      }
+    }
+  }
+</script>
+
+<style lang="scss" scoped>
+  .page {
+    min-height: 100vh;
+    background-color: #f5f5f5;
+  }
+
+  .calendar-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20rpx;
+    background-color: #fff;
+  }
+
+  .current-date {
+    font-size: 32rpx;
+    font-weight: bold;
+  }
+
+  .week-title {
+    display: flex;
+    background-color: #fff;
+    border-bottom: 1rpx solid #eee;
+  }
+
+  .week-day {
+    flex: 1;
+    text-align: center;
+    padding: 15rpx 0;
+    font-size: 28rpx;
+    color: #666;
+  }
+
+  .calendar-grid {
+    background-color: #fff;
+    padding-bottom: 20rpx;
+  }
+
+  .calendar-row {
+    display: flex;
+  }
+
+  .calendar-day {
+    flex: 1;
+    height: 120rpx;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .day-text {
+    font-size: 28rpx;
+    width: 50rpx;
+    height: 50rpx;
+    line-height: 50rpx;
+    text-align: center;
+    border-radius: 50%;
+  }
+
+  .calendar-day.today .day-text {
+    background-color: #007aff;
+    color: #fff;
+  }
+
+  .record-indicator {
+    width: 8rpx;
+    height: 8rpx;
+    border-radius: 50%;
+    background-color: #007aff;
+    margin-top: 8rpx;
+  }
+
+  .records-container {
+    margin-top: 20rpx;
+    padding: 0 20rpx;
+  }
+
+  .records-title {
+    font-size: 28rpx;
+    color: #666;
+    margin-bottom: 10rpx;
+    display: block;
+  }
+
+  .expense {
+    color: #ff4d4f;
+  }
+
+  .income {
+    color: #00b42a;
+  }
+
+  .add-fab {
+    position: fixed;
+    bottom: 30rpx;
+    right: 30rpx;
+  }
+</style>

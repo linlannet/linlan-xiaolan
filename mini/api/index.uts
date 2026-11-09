@@ -1,0 +1,9 @@
+// 导出类型定义
+export * from './types/user.d.uts';
+
+// 导出业务模块
+export * as UserApi from './modules/user';
+export * as CommBookApi from './modules/commBook';
+export * as WxminiApi from './modules/wxmini';
+export * as PlatformApi from './modules/platform';
+export * as FinanceApi from './modules/finance';

@@ -1,0 +1,573 @@
+<template>
+	<view class="login-container">
+		<!-- 顶部背景 -->
+		<view class="login-header">
+			<view class="header-bg"></view>
+			<view class="header-content">
+				<text class="welcome-text">欢迎使用</text>
+				<text class="app-name">览生活</text>
+			</view>
+		</view>
+
+		<!-- 登录表单 -->
+		<view class="login-form">
+			<!-- 微信小程序登录 -->
+			<view class="login-section" v-if="isWechatMp">
+				<text class="section-title">快速登录</text>
+				<view class="logo-img">
+					<image class="img" src="/static/images/logo.png" mode="aspectFill"></image>
+				</view>
+				<!-- 微信登录按钮 -->
+				<button class="wechat-login-btn" @getuserinfo="onGetUserProfile" open-type="getUserInfo" 
+					:loading="loading" :disabled="loading || !agreementChecked">
+					<view class="btn-content">
+						<text class="btn-text">微信用户一键登录</text>
+					</view>
+				</button>
+
+				<!-- 其他登录方式 -->
+				<view class="other-login" v-if="showOtherLogin">
+					<view class="divider">
+						<view class="divider-line"></view>
+						<text class="divider-text">其他方式</text>
+						<view class="divider-line"></view>
+					</view>
+
+					<view class="other-login-options">
+						<button class="sms-login-btn" @click="onSmsLogin">
+							<text class="sms-text">短信验证码登录</text>
+						</button>
+					</view>
+				</view>
+			</view>
+
+			<!-- H5用户名密码登录 -->
+			<view class="login-section" v-if="isH5">
+				<text class="section-title">账号登录</text>
+
+				<!-- 用户名输入框 -->
+				<view class="input-group">
+					<fui-input class="login-input" v-model="username" placeholder="请输入用户名/手机号" :clearable="true"
+						:border="false">
+						<template #left>
+							<fui-icon name="user" color="#999" :size="20"></fui-icon>
+						</template>
+					</fui-input>
+				</view>
+
+				<!-- 密码输入框 -->
+				<view class="input-group">
+					<fui-input class="login-input" v-model="password" placeholder="请输入密码" password :clearable="true"
+						:border="false">
+						<template #left>
+							<fui-icon name="lock" color="#999" :size="20"></fui-icon>
+						</template>
+					</fui-input>
+				</view>
+
+				<!-- 登录按钮 -->
+				<button class="login-btn" @click="onUsernameLogin" :loading="loading" :disabled="loading">
+					<text class="btn-text">登录</text>
+				</button>
+
+				<!-- 忘记密码 -->
+				<view class="forgot-password">
+					<text class="forgot-text" @click="onForgotPassword">忘记密码？</text>
+				</view>
+			</view>
+
+			<!-- 协议说明 -->
+			<view class="agreement-section">
+				<view class="agreement-checkbox">
+					<fui-checkbox-group @change="onAgreementChange">
+						<fui-label style="display: flex;flex-flow: row;">
+							<fui-checkbox value="1"></fui-checkbox>
+							<text class="agreement-text">
+								我已阅读并同意
+								<text class="agreement-link" @click="onUserAgreement">《用户协议》</text>
+								和
+								<text class="agreement-link" @click="onPrivacyAgreement">《隐私政策》</text>
+							</text>
+						</fui-label>
+					</fui-checkbox-group>
+				</view>
+			</view>
+		</view>
+
+	</view>
+</template>
+
+<script lang="uts">
+	import { reactive, toRefs, computed } from 'vue'
+	import { addRecord } from '@/store/index.uts'
+	import fui from '@/common/fui-app.uts'
+	import { miniLogin } from '@/api/modules/user/login.uts'
+	import LoginUtils from '@/utils/login.uts'
+
+	interface LoginState {
+		loading : boolean
+		agreementChecked : boolean
+		showOtherLogin : boolean
+		phoneNumber : string
+		username : string
+		password : string
+	}
+
+	export default {
+		setup() {
+			const state = reactive<LoginState>({
+				loading: false,
+				agreementChecked: false,
+				showOtherLogin: false,
+				phoneNumber: '',
+				username: '',
+				password: ''
+			})
+
+			// 平台判断
+			const isWechatMp = computed(() => {
+				// #ifdef MP-WEIXIN
+				return true
+				// #endif
+				// #ifndef MP-WEIXIN
+				return false
+				// #endif
+			})
+
+			const isH5 = computed(() => {
+				// #ifdef H5
+				return true
+				// #endif
+				// #ifndef H5
+				return false
+				// #endif
+			})
+			// #ifdef MP-WEIXIN
+			// 微信获取用户信息
+			const onGetUserProfile = (e : any) => {
+				if (!state.agreementChecked) {
+					fui.toast('请先同意用户协议和隐私政策')
+					return
+				}
+
+				if (e.detail.errMsg !== 'getUserInfo:ok') {
+					fui.toast('请允许授权以完成登录')
+					return
+				}
+
+				state.loading = true
+				uni.showLoading({
+					title: '登录中...',
+					mask: false
+				});
+
+				// 获取用户信息
+				const userInfo = e.detail.userInfo;
+
+				// 获取登录凭证
+				uni.login({
+					success: async (loginRes) => {
+						try {
+							// 调用登录接口（传递code和用户信息）
+							const userData = await miniLogin(loginRes.code)
+							LoginUtils.saveLoginInfo(userData.data.token, {
+								nickname: userInfo.nickName,
+								avatar: userInfo.avatarUrl,
+								loginType: 'wechat'
+							})
+							state.loading = false
+							uni.hideLoading()
+							fui.toast('登录成功')
+							uni.navigateBack()
+						} catch (err) {
+							state.loading = false
+							uni.hideLoading()
+							fui.toast('登录失败：' + err.message)
+						}
+					},
+					fail: (err) => {
+						
+						state.loading = false
+						uni.hideLoading()
+						fui.toast('获取登录凭证失败，请重试')
+					}
+				})
+			}
+			// #endif
+			// #ifdef MP-WEIXIN
+			// 微信获取手机号
+			const onGetPhoneNumber = (e : any) => {
+				if (!state.agreementChecked) {
+					fui.toast('请先同意用户协议和隐私政策')
+					return
+				}
+
+				state.loading = true
+				uni.showLoading({
+					title: '登录中...', // 提示文字
+					mask: false // 是否显示透明蒙层，防止触摸穿透
+				});
+
+
+				if (e.detail.errMsg === 'getPhoneNumber:ok') {
+					// 这里需要调用后端接口解密手机号
+					// 实际项目中需要将 e.detail 发送到后端解密
+					
+
+					// 添加实际登录逻辑
+					uni.login({
+						success: async (loginRes) => {
+							
+							try {
+								const userData = await miniLogin(loginRes.code)
+								LoginUtils.saveLoginInfo(userData.data.token, {
+									nickname: res.userInfo.nickName,
+									avatar: res.userInfo.avatarUrl,
+									phoneNumber: '已授权',
+									loginType: 'wechat'
+								})
+								state.loading = false
+								uni.hideLoading()
+								fui.toast('登录成功')
+								uni.navigateBack()
+							} catch (err) {
+								state.loading = false
+								uni.hideLoading()
+								fui.toast('登录失败：' + err.message)
+							}
+						},
+						fail: (err) => {
+							
+
+							// 添加实际错误处理
+							state.loading = false
+							uni.hideLoading()
+							fui.toast('获取用户信息失败，请重试')
+						}
+
+					})
+
+					// 先获取用户信息（昵称和头像）
+					// uni.getUserProfile({
+					// 	desc: '用于完善用户资料',
+					// 	success: (res) => {
+					// 		console.log('用户信息:', res)
+
+					// 	},
+					// 	fail: (err) => {
+					// 		console.log('获取用户信息失败:', err)
+
+					// 		// 添加实际错误处理
+					// 		state.loading = false
+					// 		uni.hideLoading()
+					// 		fui.toast('获取用户信息失败，请重试')
+					// 	}
+					// })
+				}
+			}
+			// #endif
+
+			// H5用户名密码登录
+			const onUsernameLogin = () => {
+				if (!state.agreementChecked) {
+					fui.toast('请先同意用户协议和隐私政策')
+					return
+				}
+
+				if (!state.username.trim()) {
+					fui.toast('请输入用户名')
+					return
+				}
+
+				if (!state.password.trim()) {
+					fui.toast('请输入密码')
+					return
+				}
+
+				state.loading = true
+				// 添加实际登录API调用（如果需要）
+				fui.toast('H5登录功能开发中')
+				state.loading = false
+			}
+
+			// 忘记密码
+			const onForgotPassword = () => {
+				fui.toast('忘记密码功能开发中')
+			}
+
+			// 短信验证码登录
+			const onSmsLogin = () => {
+				fui.toast('短信验证码登录功能开发中')
+			}
+
+			// 协议选择变化
+			const onAgreementChange = (e : any) => {
+				state.agreementChecked = e.length > 0
+			}
+
+			// 用户协议
+			const onUserAgreement = () => {
+				uni.navigateTo({
+					url: '/pages/common/agreement/user-agreement'
+				})
+			}
+
+			// 隐私政策
+			const onPrivacyAgreement = () => {
+				uni.navigateTo({
+					url: '/pages/common/agreement/privacy-agreement'
+				})
+			}
+
+			return {
+				...toRefs(state),
+				isWechatMp,
+				isH5,
+				onGetUserProfile,
+				onGetPhoneNumber,
+				onUsernameLogin,
+				onForgotPassword,
+				onSmsLogin,
+				onAgreementChange,
+				onUserAgreement,
+				onPrivacyAgreement
+			}
+		}
+	}
+</script>
+
+<style lang="scss" scoped>
+	.login-container {
+		min-height: 100vh;
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		position: relative;
+	}
+
+	.login-header {
+		height: 300rpx;
+		position: relative;
+
+		.header-bg {
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+		}
+
+		.header-content {
+			position: relative;
+			z-index: 1;
+			padding: 120rpx 60rpx 0;
+
+			.welcome-text {
+				display: block;
+				font-size: 36rpx;
+				color: #FFFFFF;
+				opacity: 0.9;
+				margin-bottom: 16rpx;
+			}
+
+			.app-name {
+				display: block;
+				font-size: 48rpx;
+				color: #FFFFFF;
+				font-weight: 600;
+			}
+		}
+	}
+
+	.login-form {
+		background: #FFFFFF;
+		border-radius: 40rpx 40rpx 0 0;
+		margin-top: -40rpx;
+		position: relative;
+		z-index: 2;
+		min-height: calc(100vh - 260rpx);
+		padding: 60rpx 48rpx;
+	}
+
+	.login-section {
+		.section-title {
+			display: block;
+			font-size: 32rpx;
+			color: #333333;
+			font-weight: 600;
+			margin-bottom: 48rpx;
+			text-align: center;
+		}
+
+		// Logo样式
+		.logo-img {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			margin: 80rpx;
+
+			.img {
+				width: 120rpx;
+				height: 120rpx;
+				border-radius: 20rpx;
+			}
+		}
+
+		// H5登录表单样式
+		.input-group {
+			margin-bottom: 32rpx;
+
+			::v-deep .fui-input {
+				background: #F8F8F8;
+				border-radius: 24rpx;
+				padding: 24rpx 32rpx;
+
+				.fui-input__wrap {
+					background: transparent;
+					border: none;
+				}
+
+				.fui-input__input {
+					font-size: 28rpx;
+					color: #333;
+				}
+			}
+		}
+
+		.login-btn {
+			width: 100%;
+			height: 96rpx;
+			background: #465CFF;
+			border-radius: 48rpx;
+			border: none;
+			margin-top: 40rpx;
+
+			&::after {
+				border: none;
+			}
+
+			.btn-text {
+				font-size: 32rpx;
+				color: #FFFFFF;
+				font-weight: 500;
+			}
+
+			&[disabled] {
+				background: #B2B2B2;
+			}
+		}
+
+		.forgot-password {
+			text-align: right;
+			margin-top: 24rpx;
+
+			.forgot-text {
+				font-size: 24rpx;
+				color: #465CFF;
+			}
+		}
+
+		.wechat-login-btn {
+			width: 100%;
+			height: 96rpx;
+			background: #07C160;
+			border-radius: 48rpx;
+			border: none;
+			margin-bottom: 32rpx;
+
+			&::after {
+				border: none;
+			}
+
+			.btn-content {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				height: 100%;
+
+				.wechat-icon {
+					width: 40rpx;
+					height: 40rpx;
+					margin-right: 16rpx;
+				}
+
+				.btn-text {
+					font-size: 32rpx;
+					color: #FFFFFF;
+					font-weight: 500;
+				}
+			}
+
+			&[disabled] {
+				background: #B2B2B2;
+			}
+		}
+	}
+
+	.other-login {
+		margin-top: 60rpx;
+
+		.divider {
+			display: flex;
+			align-items: center;
+			margin-bottom: 32rpx;
+
+			.divider-line {
+				flex: 1;
+				height: 1rpx;
+				background: #E5E5E5;
+			}
+
+			.divider-text {
+				font-size: 24rpx;
+				color: #999999;
+				padding: 0 24rpx;
+			}
+		}
+
+		.sms-login-btn {
+			width: 100%;
+			height: 80rpx;
+			background: transparent;
+			border: 2rpx solid #465CFF;
+			border-radius: 40rpx;
+
+			&::after {
+				border: none;
+			}
+
+			.sms-text {
+				font-size: 28rpx;
+				color: #465CFF;
+			}
+		}
+	}
+
+	.agreement-section {
+		position: absolute;
+		bottom: 60rpx;
+		left: 48rpx;
+		right: 48rpx;
+
+		.agreement-checkbox {
+			::v-deep .fui-checkbox__wrap {
+				align-items: flex-start;
+			}
+
+			::v-deep .fui-checkbox__text {
+				font-size: 24rpx;
+				line-height: 1.4;
+			}
+
+			.agreement-text {
+				font-size: 24rpx;
+				color: #666666;
+				line-height: 1.8;
+				margin-left: 16rpx;
+			}
+
+			.agreement-link {
+				color: #465CFF;
+			}
+		}
+	}
+</style>

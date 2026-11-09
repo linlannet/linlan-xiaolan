@@ -1,0 +1,193 @@
+<template>
+	<view class="agreement-container">
+		<scroll-view class="agreement-content" scroll-y>
+			<view class="agreement-body">
+				<text class="title">用户协议</text>
+				<text class="update-time">最后更新日期：2024-05-13</text>
+				
+				<view class="section">
+					<text class="section-title">1. 服务条款的确认和接纳</text>
+					<text class="section-content">
+						linlan-app（以下简称"本应用"）根据以下服务条款为您提供服务。这些条款可由本应用随时更新，且毋须另行通知。本应用使用协议（以下简称"使用协议"）一旦发生变动，本应用将在网页上公布修改内容。修改后的使用协议一旦在网页上公布即有效代替原来的使用协议。
+					</text>
+				</view>
+
+				<view class="section">
+					<text class="section-title">2. 服务说明</text>
+					<text class="section-content">
+						本应用目前为您提供记账管理、数据统计等服务。除非本使用协议另有其它明示规定，本应用所推出的新产品、新功能、新服务，均受到本使用协议之规范。
+					</text>
+				</view>
+
+				<view class="section">
+					<text class="section-title">3. 您的注册义务</text>
+					<text class="section-content">
+						为了能使用本服务，您同意以下事项：依本服务注册提示请您填写正确的注册信息，并确保其真实性；如您提供任何违法、不道德或本应用认为不适合在本应用上展示的资料；或者本应用有理由怀疑您的资料属于程序或恶意操作，本应用有权暂停或终止您的帐号，并拒绝您于现在和未来使用本服务之全部或任何部分。
+					</text>
+				</view>
+
+				<view class="section">
+					<text class="section-title">4. 用户隐私制度</text>
+					<text class="section-content">
+						尊重用户个人隐私是本应用的一项基本政策。所以，本应用一定不会在未经合法用户授权时公开、编辑或透露其注册资料及保存在本应用中的非公开内容，除非有法律许可要求或本应用在诚信的基础上认为透露这些信息在以下四种情况是必要的：
+						\n\n（1）遵守有关法律规定，遵从本应用合法服务程序。
+						\n（2）保持维护本应用的商标所有权。
+						\n（3）在紧急情况下竭力维护用户个人和社会大众的隐私安全。
+						\n（4）符合其他相关的要求。
+					</text>
+				</view>
+
+				<view class="section">
+					<text class="section-title">5. 免责声明</text>
+					<text class="section-content">
+						用户明确同意其使用本应用服务所存在的风险将完全由其自己承担；因其使用本应用服务而产生的一切后果也由其自己承担，本应用对用户不承担任何责任。
+					</text>
+				</view>
+
+				<view class="section">
+					<text class="section-title">6. 服务变更、中断或终止</text>
+					<text class="section-content">
+						如因系统维护或升级的需要而需暂停网络服务，本应用将尽可能事先进行通告。
+						\n\n如发生下列任何一种情形，本应用有权随时中断或终止向用户提供本协议项下的网络服务而无需通知用户：
+						\n（1）用户提供的个人资料不真实；
+						\n（2）用户违反本协议中规定的使用规则。
+					</text>
+				</view>
+
+				<view class="agree-btn-section">
+					<button class="agree-btn" @click="onAgree">同意并继续</button>
+				</view>
+			</view>
+		</scroll-view>
+	</view>
+</template>
+
+<script lang="uts">
+	export default {
+		setup() {
+			const onBack = () => {
+				uni.navigateBack()
+			}
+
+			const onAgree = () => {
+				uni.navigateBack()
+			}
+
+			return {
+				onBack,
+				onAgree
+			}
+		}
+	}
+</script>
+
+<style lang="scss" scoped>
+	.agreement-container {
+		min-height: 100vh;
+		background: #FFFFFF;
+		padding-top: var(--status-bar-height);
+	}
+
+	.custom-navbar {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 1000;
+		background: #FFFFFF;
+		height: 88rpx;
+		padding-top: var(--status-bar-height);
+		border-bottom: 1rpx solid #F0F0F0;
+
+		.navbar-content {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			height: 88rpx;
+			padding: 0 32rpx;
+
+			.navbar-left {
+				width: 80rpx;
+				height: 100%;
+				display: flex;
+				align-items: center;
+				justify-content: flex-start;
+			}
+
+			.navbar-title {
+				font-size: 32rpx;
+				font-weight: 600;
+				color: #333333;
+			}
+
+			.navbar-right {
+				width: 80rpx;
+				height: 100%;
+			}
+		}
+	}
+
+	.agreement-content {
+		height: calc(100vh - var(--status-bar-height) - 88rpx);
+		padding: 32rpx;
+		margin-top: 88rpx;
+	}
+
+	.agreement-body {
+		.title {
+			display: block;
+			font-size: 40rpx;
+			font-weight: 600;
+			color: #333333;
+			text-align: center;
+			margin-bottom: 16rpx;
+		}
+
+		.update-time {
+			display: block;
+			font-size: 24rpx;
+			color: #999999;
+			text-align: center;
+			margin-bottom: 48rpx;
+		}
+
+		.section {
+			margin-bottom: 48rpx;
+
+			.section-title {
+				display: block;
+				font-size: 32rpx;
+				font-weight: 600;
+				color: #333333;
+				margin-bottom: 24rpx;
+			}
+
+			.section-content {
+				display: block;
+				font-size: 28rpx;
+				color: #666666;
+				line-height: 1.6;
+				white-space: pre-line;
+			}
+		}
+
+		.agree-btn-section {
+			margin-top: 80rpx;
+			padding: 32rpx 0;
+
+			.agree-btn {
+				width: 100%;
+				height: 88rpx;
+				background: #465CFF;
+				border-radius: 44rpx;
+				color: #FFFFFF;
+				font-size: 32rpx;
+				border: none;
+
+				&::after {
+					border: none;
+				}
+			}
+		}
+	}
+</style>

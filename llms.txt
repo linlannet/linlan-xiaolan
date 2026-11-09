@@ -1,0 +1,55 @@
+# linlan-xiaolan — 览生活 / 小览生活全栈工程
+
+> Spring Boot 服务端（xiaolan-backend）+ uni-app x 移动端（mini），覆盖官网内容、记账本、心愿、提醒与微信登录。
+
+Key capabilities:
+- 官网内容接口：新闻、服务、解决方案、联系
+- 小览生活：记账本、分类、心愿、提醒、心情记录
+- 微信：公众号、小程序、开放平台登录
+- 平台状态监控接口
+- 移动端：uni-app x（UVue + UTS），首页 / 记账本 / 我的
+
+Tech stack: Java 17, Spring Boot, Spring Security, MyBatis, Druid, EFRAME 1.2.1, uni-app x (UTS), 45 uni_modules
+Version: backend 1.2.2, mini 0.0.1
+Repository: https://github.com/linlannet/linlan-xiaolan
+
+Build / Test:
+- Prerequisite: `cd ../linlan-eframe/backend && mvn clean install`
+- Backend build: `cd backend && mvn clean install`
+- Backend run:   `java -jar backend/target/xiaolan-backend.jar --spring.profiles.active=dev`
+- Backend test:  `mvn test`
+- Mobile: open `mini/` with HBuilderX; no npm scripts
+
+Runtime:
+- Default profile: `prod`
+- Dev:  port 8081, context `/xiaolan_backend`
+- Prod: port 8310, context `/xiaolan_backend`
+- Primary DB:   `basedb_1.0`
+- Secondary DB: `xiaolandb_1.0` (disabled by default)
+- Mobile API:   `https://linlan.net/xiaolan_backend` (`mini/config/index.uts`)
+
+Backend map:
+- backend/src/main/java/net/linlan/www/comm        website content
+- backend/src/main/java/net/linlan/xiaolan/comm    categories, bookkeeping
+- backend/src/main/java/net/linlan/xiaolan/my      BookInfo, MindRecord, CheckRecord, WishInfo
+- backend/src/main/java/net/linlan/manage/wechat   WeChat integrations
+- backend/src/main/java/net/linlan/stage           security, status monitor
+- backend/src/main/resources/mapper               MyBatis XML
+- backend/scripts/sql                             database scripts
+- backend/scripts/codestyle                       code style
+
+Mobile map:
+- mini/pages/tabbar                               home, finance, my
+- mini/api/modules                                commBook, finance, platform, user, wxmini
+- mini/utils                                      request, login
+- mini/store                                      state
+- mini/config/index.uts                           API URL, timeout, storage keys
+- mini/uni_modules                                45 native modules
+- mini/doc/plat-xiaolan.html(.md)                 API docs
+
+Docs:
+- README.md / README.en.md
+- AGENTS.md
+- CHANGELOG.md
+- backend/README.md / backend/CHANGELOG.md / backend/FAQ.md
+- mini/doc/plat-xiaolan.html.md

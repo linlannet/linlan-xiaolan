@@ -1,0 +1,145 @@
+/**
+ * 登录工具类使用示例
+ * 展示如何在不同的场景下使用 LoginUtils 类
+ */
+
+import LoginUtils from './login.uts'
+import fui from '@/common/fui-app.uts'
+import { api } from '@/utils/request.uts'; // 修改此处导入路径
+
+// 示例1：页面进入时检查登录状态
+class PageExample {
+	// 页面显示时检查登录状态
+	onShow() {
+		if (!LoginUtils.isLoggedIn()) {
+			// 未登录，跳转到登录页
+			LoginUtils.checkLoginAndRedirect('/pages/tabbar/my/my')
+			return
+		}
+		
+		// 已登录，可以正常显示页面内容
+		const userInfo = LoginUtils.getCurrentUserInfo()
+		console.log('当前用户:', userInfo?.nickname)
+	}
+	
+	// 获取用户信息展示
+	getUserDisplayInfo() {
+		return {
+			nickname: LoginUtils.getNickname(),
+			avatar: LoginUtils.getAvatar(),
+			loginType: LoginUtils.getLoginType()
+		}
+	}
+	
+	// 退出登录示例
+	logoutExample() {
+		fui.modal('提示', '确定要退出登录吗？', (confirm: boolean) => {
+			if (confirm) {
+				LoginUtils.logout(() => {
+					fui.toast('已退出登录')
+					// 跳转到首页或登录页
+					uni.reLaunch({
+						url: '/pages/tabbar/index/index'
+					})
+				})
+			}
+		})
+	}
+}
+
+// 示例2：API请求时添加认证头
+class ApiExample {
+	// 获取带认证头的请求配置
+	getAuthHeaders() {
+		const token = LoginUtils.getCurrentToken()
+		if (!token) {
+			throw new Error('用户未登录')
+		}
+		
+		return {
+			'Authorization': 'Bearer ' + token,
+			'Content-Type': 'application/json'
+		}
+	}
+	
+	// 安全的API请求方法
+	async safeApiRequest(url: string, data?: any) {
+		// 检查登录状态
+		if (!LoginUtils.isLoggedIn()) {
+			LoginUtils.checkLoginAndRedirect()
+			return
+		}
+		
+		try {
+			const headers = this.getAuthHeaders()
+			// 这里调用实际的API请求
+			// const result = await uni.request({ url, data, headers })
+			return { success: true }
+		} catch (error) {
+			console.error('API请求失败:', error)
+			return { success: false, error }
+		}
+	}
+}
+
+// 示例3：组件中使用登录状态
+class ComponentExample {
+	// 计算属性：根据登录状态显示不同的内容
+	get displayText() {
+		if (LoginUtils.isLoggedIn()) {
+			return `欢迎回来，${LoginUtils.getNickname()}！`
+		} else {
+			return '请先登录'
+		}
+	}
+	
+	// 根据登录状态显示不同的按钮
+	get buttonConfig() {
+		if (LoginUtils.isLoggedIn()) {
+			return {
+				text: '退出登录',
+				color: '#ff4757',
+				onClick: this.logoutExample
+			}
+		} else {
+			return {
+				text: '立即登录',
+				color: '#465CFF',
+				onClick: () => LoginUtils.checkLoginAndRedirect()
+			}
+		}
+	}
+}
+
+// 示例4：登录成功后处理
+class LoginSuccessHandler {
+	// 处理登录成功后的逻辑
+	handleLoginSuccess(token: string, userInfo: any, redirectUrl?: string) {
+		// 保存登录信息
+		LoginUtils.saveLoginInfo(token, userInfo)
+		
+		// 显示登录成功提示
+		fui.toast('登录成功')
+		
+		// 如果有重定向URL，跳转到指定页面
+		if (redirectUrl) {
+			uni.redirectTo({
+				url: redirectUrl
+			})
+		} else {
+			// 返回上一页或跳转到首页
+			const pages = getCurrentPages()
+			if (pages.length > 1) {
+				uni.navigateBack()
+			} else {
+				uni.switchTab({
+					url: '/pages/tabbar/index/index'
+				})
+			}
+		}
+	}
+}
+
+// 导出示例类供参考
+export { PageExample, ApiExample, ComponentExample, LoginSuccessHandler }
+export default LoginUtils

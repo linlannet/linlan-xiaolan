@@ -1,0 +1,33 @@
+import type { AppConfig, EnvConfig } from './env.d.uts';
+
+// 根据环境变量获取基础配置
+const getEnvConfig = (): EnvConfig => {
+  // 实际项目中可根据process.env.NODE_ENV区分环境
+  const isProd = import.meta.env.MODE === 'production';
+
+  return {
+    // API基础URL
+    API_BASE_URL: isProd
+      ? 'https://linlan.net/xiaolan_backend'
+      : 'https://linlan.net/xiaolan_backend',
+    // 请求超时时间(10秒)
+    REQUEST_TIMEOUT: 10000,
+    // 存储键名前缀
+    STORAGE_KEY_PREFIX: 'linlan_'
+  };
+};
+
+// 环境配置
+const envConfig = getEnvConfig();
+
+// 应用配置
+const appConfig: AppConfig = {
+  env: envConfig,
+  storageKeys: {
+    token: `${envConfig.STORAGE_KEY_PREFIX}token`,
+    userInfo: `${envConfig.STORAGE_KEY_PREFIX}user_info`,
+    lastLoginTime: `${envConfig.STORAGE_KEY_PREFIX}last_login_time`
+  }
+};
+
+export default appConfig;

@@ -1,0 +1,68 @@
+export interface RequestEnv {
+  baseUrl: string
+  timeout: number
+  tokenKey: string
+  userInfoKey: string
+  tokenScheme: string
+  loginPage: string
+  successCodes: number[]
+}
+
+let requestEnv: RequestEnv = {
+  baseUrl: '',
+  timeout: 10000,
+  tokenKey: 'linlan_token',
+  userInfoKey: 'linlan_user_info',
+  tokenScheme: 'Linlan',
+  loginPage: '/pages/common/login/login',
+  successCodes: [0, 200]
+}
+
+export function getRequestEnv(): RequestEnv {
+  return requestEnv
+}
+
+export interface RequestEnvInput {
+  baseUrl?: string
+  timeout?: number
+  tokenKey?: string
+  userInfoKey?: string
+  tokenScheme?: string
+  loginPage?: string
+  successCodes?: number[]
+}
+
+export function setRequestEnv(input: RequestEnvInput): void {
+  if (input.baseUrl != null) requestEnv.baseUrl = input.baseUrl as string
+  if (input.timeout != null) requestEnv.timeout = input.timeout as number
+  if (input.tokenKey != null) requestEnv.tokenKey = input.tokenKey as string
+  if (input.userInfoKey != null) requestEnv.userInfoKey = input.userInfoKey as string
+  if (input.tokenScheme != null) requestEnv.tokenScheme = input.tokenScheme as string
+  if (input.loginPage != null) requestEnv.loginPage = input.loginPage as string
+  if (input.successCodes != null) requestEnv.successCodes = input.successCodes as number[]
+}
+
+export function initRequestEnv(baseUrl: string): void {
+  requestEnv.baseUrl = baseUrl
+}
+
+export function resolveRequestUrl(url: string): string {
+  if (url.indexOf('http://') == 0 || url.indexOf('https://') == 0) {
+    return url
+  }
+  const base = requestEnv.baseUrl
+  if (base.length == 0) {
+    return url
+  }
+  const lastChar = base.substring(base.length - 1)
+  if (url.indexOf('/') == 0) {
+    if (lastChar == '/') {
+      return base.substring(0, base.length - 1) + url
+    }
+    return base + url
+  }
+  if (lastChar == '/') {
+    return base + url
+  }
+  return base + '/' + url
+}

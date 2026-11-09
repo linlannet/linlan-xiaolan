@@ -1,0 +1,129 @@
+# database
+spring:
+    # 环境 dev开发环境|prod生产环境
+    profiles:
+        active: prod
+    # 资源信息
+    messages:
+        # 国际化资源文件路径
+        basename: i18n/messages
+
+    # 解决SpringBoot项目部署在同一个tomcat容器报错问题
+    jmx:
+        default-domain: @project.artifactId@   # @project.artifactId@
+    # jackson时间格式化
+    jackson:
+        time-zone: GMT+8
+        date-format: yyyy-MM-dd HH:mm:ss
+    servlet:
+        multipart:
+            max-file-size: 1000MB
+            max-request-size: 1000MB
+            enabled: true
+        encoding:
+            force: true
+    # 服务模块
+    devtools:
+        restart:
+            # 热部署开关
+            enabled: true
+    mail:
+        host: smtp.163.com
+        username: noname@163.com
+        password: password
+        default-encoding: UTF-8
+        properties:
+            mail:
+                smtp:
+                    auth: true
+                    starttls:
+                        enable: true
+                    stattls:
+                        required: true
+
+# Mybatis配置
+mybatis:
+    mapperLocations: classpath*:mapper/**/*.xml
+    configLocation: classpath:mybatis.xml
+
+# PageHelper分页插件
+pagehelper:
+    autoRuntimeDialect: true   # 自动识别运行时数据源类型，支持多数据源环境
+    #    helperDialect: mysql   # 单数据源使用
+    supportMethodsArguments: true
+    params: count=countSql
+    reasonable: true    # 对不合法的分页参数进行合理化处理
+
+# 平台相关配置
+platform:
+    name: xiaolan     # 名称
+    version: 1.2.X     # 版本
+    copyrightYear: 2023     # 版权年份
+    profile: ${platform.file.dir}      # 文件路径
+    addressEnabled: false       # 获取ip地址开关
+    captchaType: math       # 验证码类型 math 数字计算 char 字符验证
+    openAppChange: false      #应用是否开启APP切换，20250306
+    cache:
+        prefix: xiaolan
+    frame:
+        saveLogToPub: false   # 将日志存储到公共的日志行为服务器上
+        saveCommLog: true   # 保存接口通用日志
+        saveFrontOpLog: true   # 保存接口通用日志
+
+    http:       #http client to visit third server
+        maxTotal: 100
+        defaultMaxPerRoute: 20
+        connectTimeout: 1000
+        connectionRequestTimeout: 500
+        socketTimeout: 10000
+
+    redis:
+        open: true  # 是否开启redis缓存  true开启   false关闭
+
+    file:
+        store:
+            fileServer: false  #是否采用本地文件服务器进行文件存储及预览 true开启   false关闭
+            thirdOss: false  #是否开通和使用第三方存储，true开启   false关闭，采用本地路径存储
+
+    quartz:
+        openInit: false  #是否开通和使用Quartz定时器，true开启   false关闭
+        openScheduleTask: false     #是否开通周期性任务后台自动处理更新配置
+
+    repeatSubmit:
+        intervalTime: 10 #间隔时间，单位秒，默认10秒  小于或等于0表示关闭重复提交拦截，即可以重复提交
+
+    sendMessage:
+        openEventMessage: false #是否发送事件消息通知功能  false关闭
+
+    # 用户配置
+    user:
+        password:
+            # 密码最大错误次数
+            maxRetryCount: 5
+            # 密码锁定时间（默认10分钟）
+            lockTime: 10
+
+    # token配置
+    token:
+        # 令牌自定义标识
+        header: Authorization
+        # 令牌密钥
+        secret: Labcdefghijklmnopqrstuvwxyzl
+        # 令牌有效期（默认30分钟）
+        expireTime: 30
+
+    # Swagger配置
+    swagger:
+        # 是否开启swagger
+        enabled: true
+        # 请求前缀
+        pathMapping: /dev-api
+
+    # 防止XSS攻击
+    xss:
+        # 过滤开关
+        enabled: true
+        # 排除链接（多个用逗号分隔）
+        excludes: /api/open/*,/api/system/notice
+        # 匹配链接
+        urlPatterns: /api/system/*,/api/admin/*,/api/monitor/*,/api/tool/*

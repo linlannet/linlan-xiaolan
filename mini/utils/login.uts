@@ -1,0 +1,109 @@
+import { getRequestEnv } from './config.uts'
+
+export interface UserInfo {
+  nickname: string
+  avatar: string
+  phoneNumber?: string
+  loginType: string
+}
+
+export interface LoginResult {
+  isLogin: boolean
+  userInfo: UserInfo | null
+  token: string | null
+}
+
+export default class LoginUtils {
+  static getCurrentToken(): string {
+    const token = uni.getStorageSync(getRequestEnv().tokenKey)
+    if (token == null || token == undefined) return ''
+    return token as string
+  }
+
+  static getAuthHeader(): string {
+    const token = this.getCurrentToken()
+    if (token.length == 0) return ''
+    const scheme = getRequestEnv().tokenScheme
+    return scheme.length > 0 ? scheme + ' ' + token : token
+  }
+
+  static checkLoginStatus(): LoginResult {
+    const token = this.getCurrentToken()
+    const userInfo = uni.getStorageSync(getRequestEnv().userInfoKey)
+    if (token.length > 0 && userInfo != null) {
+      return {
+        isLogin: true,
+        userInfo: userInfo as UserInfo,
+        token: token
+      }
+    }
+    return {
+      isLogin: false,
+      userInfo: null,
+      token: null
+    }
+  }
+
+  static isLoggedIn(): boolean {
+    return this.getCurrentToken().length > 0
+  }
+
+  static checkLoginAndRedirect(redirectUrl?: string): boolean {
+    if (this.isLoggedIn()) return true
+    let url = getRequestEnv().loginPage
+    if (redirectUrl != null) {
+      const target = redirectUrl as string
+      if (target.length > 0) {
+        url = url + '?redirect=' + encodeURIComponent(target)
+      }
+    }
+    uni.navigateTo({
+      url: url
+    })
+    return false
+  }
+
+  static getCurrentUserInfo(): UserInfo | null {
+    return this.checkLoginStatus().userInfo
+  }
+
+  static getNickname(): string {
+    const userInfo = this.getCurrentUserInfo()
+    if (userInfo == null) return ''
+    return (userInfo as UserInfo).nickname
+  }
+
+  static getAvatar(): string {
+    const userInfo = this.getCurrentUserInfo()
+    if (userInfo == null) return ''
+    return (userInfo as UserInfo).avatar
+  }
+
+  static getLoginType(): string {
+    const userInfo = this.getCurrentUserInfo()
+    if (userInfo == null) return ''
+    return (userInfo as UserInfo).loginType
+  }
+
+  static saveLoginInfo(token: string, userInfo: UserInfo): void {
+    uni.setStorageSync(getRequestEnv().tokenKey, token)
+    uni.setStorageSync(getRequestEnv().userInfoKey, userInfo)
+  }
+
+  static updateUserInfo(userInfo: UserInfo): void {
+    uni.setStorageSync(getRequestEnv().userInfoKey, userInfo)
+  }
+
+  static clearLogin(): void {
+    uni.removeStorageSync(getRequestEnv().tokenKey)
+    uni.removeStorageSync(getRequestEnv().userInfoKey)
+  }
+
+  static logout(callback?: () => void): void {
+    this.clearLogin()
+    if (callback != null) {
+      const done = callback as () => void
+      done()
+    }
+  }
+}

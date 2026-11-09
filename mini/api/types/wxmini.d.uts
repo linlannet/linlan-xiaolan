@@ -1,0 +1,43 @@
+/**
+ * 微信登录相关类型定义
+ */
+interface User {
+  id: number;
+  userId: string;
+  xzqhId: number;
+  source: string;
+  username: string;
+  mobile: string;
+  email: string;
+  password: string;
+  organId: string;
+  foreignId: string;
+  accountId: string;
+  accountType: string;
+  unionId: string;
+  openId: string;
+  nickName: string;
+  avatarUrl: string;
+  registerTime: string;
+  lastLoginTime: string;
+  lastLoginIp: string;
+  loginCount: number;
+  lockTime: string;
+  activation: boolean;
+  activationCode: string;
+  priority: number;
+  createTime: string;
+  delFlag: number;
+  description: string;
+  spare1: string;
+  spare2: string;
+}
+
+/**
+ * 微信登录结果类型
+ */
+export interface WxLoginResult {
+  user: User;
+  roles: string[];
+  permissions: string[];
+}

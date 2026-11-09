@@ -1,0 +1,232 @@
+<template>
+
+	<!-- #ifdef APP -->
+	<scroll-view style="flex:1">
+	<!-- #endif -->
+		<view class="fui-wrap">
+			<view class="fui-page__hd">
+				<text class="fui-page__title">记一下</text>
+				<text class="fui-page__desc">记录一下，自己的订单信息。</text>
+			</view>
+			<!-- 收支类型选择 -->
+			<fui-tabs :tabs="tabs" @change="tabChange"></fui-tabs>
+			<view class="fui-page__body">
+				<uni-forms ref="baseForm" :modelValue="baseFormData">
+					<uni-forms-item label="账本" required>
+						<view class="uni-list-cell-db">
+							<picker @change="bindPickerChange" :value="baseFormData.bookId" :range="bookList">
+								<view class="uni-input">{{bookList[baseFormData.bookId]}}</view>
+							</picker>
+						</view>
+					</uni-forms-item>
+					<uni-forms-item label="分类" required>
+						<uni-data-checkbox mode="tag" v-model="baseFormData.selectedCategory"
+							:localdata="categories"></uni-data-checkbox>
+					</uni-forms-item>
+					<uni-forms-item label="金额" required>
+						<uni-easyinput v-model="baseFormData.amount" placeholder="0.00" ></uni-easyinput>
+					</uni-forms-item>
+					<uni-forms-item label="日期" required>
+						<uni-datetime-picker class="uni-date" type="date" :clear-icon="false"
+							v-model="baseFormData.selectedDate" />
+					</uni-forms-item>
+				</uni-forms>
+			    <view>
+					<uni-easyinput type="textarea" v-model="baseFormData.remark" placeholder="请输入备注信息"  ></uni-easyinput>
+				</view>
+				
+				<!-- 底部提交按钮 -->
+				<view class="submit-btn">
+					<fui-button type="purple" :disabled="!canSubmit" text="保存记录" @onclick="saveRecord" ></fui-button>
+				</view>
+
+			</view>
+		</view>
+	<!-- #ifdef APP -->
+	</scroll-view>
+	<!-- #endif -->
+</template>
+
+<script lang="uts">
+	import { ref, reactive, computed } from 'vue'
+	import { state } from '@/store'
+	import { formatDate } from '@/common/utils'
+	import { FuiTabsItemParam } from '@/components/firstui/fui-types/index.uts'
+	import { addCheckRecord } from '@/api/modules/finance.uts'
+
+	export default {
+		setup() {
+			const date = new Date()
+			const bizType = ref('SHOURU')
+			// 表单数据
+			const tabs = ref<FuiTabsItemParam[]>([])
+			const bookList = ref(['默认账本'])
+			let cateOut = [{
+				text: '饮食',
+				value: 10
+			}, {
+				text: '住宿',
+				value: 1
+			}, {
+				text: '出行',
+				value: 2
+			}, {
+				text: '旅游',
+				value: 3
+			}, {
+				text: '购物',
+				value: 4
+			}, {
+				text: '娱乐',
+				value: 5
+			}, {
+				text: '其他',
+				value: 16
+			}]
+			let cateIn = [{
+				text: '工作',
+				value: 9
+			}, {
+				text: '副业',
+				value: 8
+			}, {
+				text: '创业',
+				value: 7
+			}, {
+				text: '其他',
+				value: 6
+			}]
+			// 分类列表
+			const categories = ref([])
+			categories.value = cateIn
+			const baseFormData = reactive({
+				bookId: 0,
+				amount: '',
+				age: '',
+				remark: '',
+				sex: 2,
+				selectedCategory: 9,
+				selectedDate: formatDate(date, 'yyyy-MM-dd')
+			})
+			tabs.value = [{
+				name: '收入'
+			}, {
+				name: '支出'
+			}] as FuiTabsItemParam[]
+
+
+			// 提交按钮状态
+			const canSubmit = computed(() => {
+				return (
+					baseFormData.amount &&
+					!isNaN(Number(baseFormData.amount)) &&
+					Number(baseFormData.amount) > 0 &&
+					baseFormData.selectedCategory
+				)
+			})
+			// 账本选择
+			const handleBookChange = (e) => {
+				// 处理账本选择变化
+				console.log(e)
+				baseFormData.bookId = e.detail.value
+			}
+			// 类型切换
+			const tabChange = (val : any) => {
+				if (val.index == 0) {
+					categories.value = cateIn
+					bizType.value = 'SHOURU'
+				} else {
+					categories.value = cateOut
+					bizType.value = 'ZHICHU'
+				}
+			}
+			// 保存后清空表单
+			const resetForm = function() {
+				baseFormData.amount = ''
+				baseFormData.remark = ''
+				baseFormData.selectedCategory = 9
+				baseFormData.selectedDate = formatDate(date, 'yyyy-MM-dd')
+			}
+
+			// 保存记录
+			const saveRecord = function() {
+
+				// 验证分类是否选择
+				let categoryName = categories.value.find(item => item.value == baseFormData.selectedCategory)
+				if (!categoryName) {
+					uni.showToast({ title: '请选择分类', icon: 'error' })
+					return
+				}
+
+				const recordData = {
+					bookId: baseFormData.bookId,
+					bookName: bookList[baseFormData.bookId],
+					type: 'JIZHANG',
+					code:baseFormData.selectedCategory,
+					name:categories.value.find(item => item.value == baseFormData.selectedCategory).text,
+					bizType: bizType.value,
+					checkMoney: baseFormData.amount,
+					description: baseFormData.remark,
+					checkTime: formatDate(new Date(baseFormData.selectedDate), 'yyyy-MM-dd HH:mm:ss')
+				}
+				addCheckRecord(recordData).then(res => {
+					if (res.code == 0) {
+						uni.showToast({ title: '保存成功', icon: 'success' })
+						resetForm()
+					} else {
+						uni.showToast({ title: res.msg || '保存失败', icon: 'error' })
+					}
+				}).catch(err => {
+					uni.showToast({ title: '请求失败', icon: 'error' })
+				})
+			}
+
+			return {
+				tabs,
+				bookList,
+				baseFormData,
+				tabChange,
+				categories,
+				canSubmit,
+				handleBookChange,
+				saveRecord,
+				resetForm
+			}
+		}
+	}
+</script>
+<style lang="scss">
+	.form-item {
+		display: flex;
+		align-items: center;
+	}
+
+	.fui-page__body {
+		margin: 16rpx 0;
+		padding: 32rpx;
+		background: #fff;
+		min-height: 80vh;
+	}
+
+	:deep(.uni-date-x) {
+		width: 100%;
+	}
+
+	::v-deep .uni-datetime-picker--btn {
+		text-align: center;
+		width: 100%;
+	}
+	.submit-btn {
+		margin-top: 32rpx;
+	}
+	.uni-list-cell-db{
+		width: 100%;
+		display: flex;
+		justify-content: center;
+		border: 1px solid #dcdfe6;
+        border-radius: 4px;
+		padding-left:5rpx;
+		font-size: 28rpx;
+		color:#666666;
+	}
+</style>

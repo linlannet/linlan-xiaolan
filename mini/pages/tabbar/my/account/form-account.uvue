@@ -1,0 +1,141 @@
+<template>
+  <view class="fui-wrap">
+    <view class="page-container">
+      <view class="form-group">
+        <text class="form-label">账本名称</text>
+        <fui-input
+          v-model="accountName"
+          placeholder="请输入账本名称"
+          class="form-input"
+        />
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">账本描述</text>
+        <fui-input
+          v-model="accountDesc"
+          placeholder="请输入账本描述"
+          class="form-input"
+          type="textarea"
+          :rows="4"
+        />
+      </view>
+
+      <view class="btn-container">
+        <fui-button
+          type="primary"
+          :size="40"
+          :text="isEditMode ? '更新账本' : '保存账本'"
+          @onclick="submitForm"
+          class="save-btn"
+          :disabled="!accountName.trim()"
+        />
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      accountId: '',
+      accountName: '',
+      accountDesc: '',
+      isEditMode: false
+    };
+  },
+  onLoad(options) {
+    // 判断是否为编辑模式
+    if (options.id) {
+      this.isEditMode = true;
+      this.accountId = options.id;
+      this.loadAccountData();
+    }
+    // 设置导航栏标题
+    uni.setNavigationBarTitle({
+      title: this.isEditMode ? '编辑账本' : '新增账本'
+    });
+  },
+  methods: {
+    loadAccountData() {
+      const accounts = uni.getStorageSync('accounts') || [];
+      const account = accounts.find(item => item.id == this.accountId);
+      if (account) {
+        this.accountName = account.name;
+        this.accountDesc = account.description || '';
+      } else {
+        uni.navigateBack();
+        uni.showToast({ title: '账本不存在', icon: 'error' });
+      }
+    },
+    submitForm() {
+      const accounts = uni.getStorageSync('accounts') || [];
+      if (this.isEditMode) {
+        // 更新现有账本
+        const index = accounts.findIndex(item => item.id == this.accountId);
+        if (index !== -1) {
+          accounts[index] = {
+            ...accounts[index],
+            name: this.accountName,
+            description: this.accountDesc
+          };
+          uni.setStorageSync('accounts', accounts);
+          uni.showToast({ title: '更新成功', icon: 'success' });
+        }
+      } else {
+        // 创建新账本
+        const newAccount = {
+          id: Date.now(),
+          name: this.accountName,
+          description: this.accountDesc,
+          createTime: new Date().toISOString()
+        };
+        accounts.push(newAccount);
+        uni.setStorageSync('accounts', accounts);
+        uni.showToast({ title: '创建成功', icon: 'success' });
+      }
+      setTimeout(() => uni.navigateBack(), 1500);
+    }
+  }
+};
+</script>
+
+<style lang="scss">
+.page-container {
+  padding: 32rpx;
+}
+
+.form-group {
+  margin-bottom: 36rpx;
+}
+
+.form-label {
+  display: block;
+  font-size: 28rpx;
+  color: #333333;
+  margin-bottom: 12rpx;
+}
+
+.form-input {
+  width: 100%;
+  border: 2rpx solid #e5e6eb;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  font-size: 28rpx;
+}
+
+.btn-container {
+  margin-top: 60rpx;
+}
+
+.save-btn {
+  width: 100%;
+  height: 90rpx;
+  border-radius: 45rpx;
+  background: linear-gradient(135deg, #465cff 0%, #7b61ff 100%);
+  color: #ffffff;
+  font-size: 32rpx;
+  box-shadow: 0 8rpx 20rpx rgba(70, 92, 255, 0.25);
+}
+</style>

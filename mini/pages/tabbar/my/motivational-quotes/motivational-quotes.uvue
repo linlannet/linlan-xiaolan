@@ -1,0 +1,244 @@
+<template>
+	<view class="fui-wrap">
+		<!-- <view class="page-header">
+			<fui-icon name="back" @click="navigateBack"></fui-icon>
+			<text class="page-title">励志格言</text>
+			<view class="right-placeholder"></view>
+		</view>
+		 -->
+		<view class="content">
+			<view class="quote-section">
+				<text class="quote-mark left">"</text>
+				<text class="quote-text">{{currentQuote.text}}</text>
+				<text class="quote-author">— {{currentQuote.author}}</text>
+				<text class="quote-mark right">"</text>
+			</view>
+			
+			<view class="action-buttons">
+				<view class="btn" @click="refreshQuote">换一句</view>
+				<view class="btn" @click="saveQuote">收藏</view>
+			</view>
+			
+			<view class="quote-history" v-if="savedQuotes.length > 0">
+				<view class="section-title">收藏的格言</view>
+				<view class="history-list">
+					<view class="history-item" v-for="(quote, index) in savedQuotes" :key="index">
+						<text class="history-text">{{quote.text}}</text>
+						<text class="history-author">— {{quote.author}}</text>
+					</view>
+				</view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+	export default {
+		data() {
+			return {
+				currentQuote: {
+					text: '成功不是终点，失败也不是终结，只有勇气才是永恒。',
+					author: '温斯顿·丘吉尔'
+				},
+				savedQuotes: [],
+				allQuotes: [
+					{
+						text: '成功不是终点，失败也不是终结，只有勇气才是永恒。',
+						author: '温斯顿·丘吉尔'
+					},
+					{
+						text: '不要等待机会，而要创造机会。',
+						author: '乔治·伯纳德·萧'
+					},
+					{
+						text: '只有那些敢于冒险的人才能获得最大的奖励。',
+						author: '弗里德里希·尼采'
+					},
+					{
+						text: '每天进步一点点，就是最大的进步。',
+						author: '中国谚语'
+					},
+					{
+						text: '困难像弹簧，你弱它就强。',
+						author: '毛泽东'
+					}
+				]
+			}
+		},
+		methods: {
+			navigateBack() {
+				uni.navigateBack()
+			},
+			
+			refreshQuote() {
+				// 随机选择一句格言
+				const randomIndex = Math.floor(Math.random() * this.allQuotes.length)
+				this.currentQuote = this.allQuotes[randomIndex]
+				
+				// 显示提示
+				uni.showToast({
+					title: '已更新',
+					type: 'success'
+				})
+			},
+			
+			saveQuote() {
+				// 检查是否已经收藏过
+				const isSaved = this.savedQuotes.some(quote => quote.text === this.currentQuote.text)
+				if (!isSaved) {
+					this.savedQuotes.unshift({...this.currentQuote})
+					uni.showToast({
+						title: '收藏成功',
+						type: 'success'
+					})
+				} else {
+					uni.showToast({
+						title: '已经收藏过了',
+						type: 'none'
+					})
+				}
+			}
+		}
+	}
+</script>
+
+<style scoped>
+	.fui-wrap {
+		min-height: 100vh;
+		background-color: #f5f5f5;
+	}
+	
+	.page-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		background-color: #fff;
+		padding: 30rpx;
+		border-bottom: 1rpx solid #f0f0f0;
+		position: sticky;
+		top: 0;
+		z-index: 10;
+	}
+	
+	.page-title {
+		font-size: 36rpx;
+		font-weight: bold;
+	}
+	
+	.right-placeholder {
+		width: 36rpx;
+	}
+	
+	.content {
+		padding: 20rpx;
+	}
+	
+	/* 格言展示区域 */
+	.quote-section {
+		background-color: #fff;
+		border-radius: 16rpx;
+		padding: 40rpx;
+		margin-bottom: 20rpx;
+		position: relative;
+		min-height: 400rpx;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+	}
+	
+	.quote-mark {
+		font-size: 100rpx;
+		color: #ff9500;
+		opacity: 0.2;
+		position: absolute;
+	}
+	
+	.quote-mark.left {
+		top: 20rpx;
+		left: 20rpx;
+	}
+	
+	.quote-mark.right {
+		bottom: 20rpx;
+		right: 20rpx;
+	}
+	
+	.quote-text {
+		font-size: 36rpx;
+		line-height: 1.6;
+		color: #333;
+		margin-bottom: 20rpx;
+		z-index: 1;
+	}
+	
+	.quote-author {
+		font-size: 28rpx;
+		color: #666;
+		align-self: flex-end;
+		z-index: 1;
+	}
+	
+	/* 操作按钮 */
+	.action-buttons {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		margin-bottom: 20rpx;
+	}
+	
+	.btn {
+		flex: 1;
+		background-color: #ff9500;
+		color: #fff;
+		text-align: center;
+		padding: 30rpx;
+		border-radius: 16rpx;
+		font-size: 32rpx;
+		margin: 0 10rpx;
+	}
+	
+	.btn:last-child {
+		background-color: #07c160;
+	}
+	
+	/* 收藏历史 */
+	.quote-history {
+		background-color: #fff;
+		border-radius: 16rpx;
+		padding: 20rpx;
+	}
+	
+	.section-title {
+		font-size: 28rpx;
+		color: #999;
+		padding: 20rpx 0 10rpx;
+	}
+	
+	.history-list {
+		max-height: 600rpx;
+		overflow-y: auto;
+	}
+	
+	.history-item {
+		padding: 20rpx 0;
+		border-bottom: 1rpx solid #f0f0f0;
+	}
+	
+	.history-item:last-child {
+		border-bottom: none;
+	}
+	
+	.history-text {
+		font-size: 28rpx;
+		color: #333;
+		display: block;
+		margin-bottom: 8rpx;
+	}
+	
+	.history-author {
+		font-size: 24rpx;
+		color: #999;
+		display: block;
+		text-align: right;
+	}
+</style>

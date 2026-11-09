@@ -1,0 +1,38 @@
+/**
+ * 用户信息类型定义
+ */
+export interface UserInfo {
+  userId: string;
+  username: string;
+  avatar?: string;
+  token: string;
+  roles: string[];
+  permissions: string[];
+  nickname: string;
+  avatar: string;
+  phoneNumber: string;
+  loginType: string;
+  // 添加其他必要字段
+}
+
+/**
+ * 登录请求参数
+ */
+export interface LoginParams {
+  username: string;
+  password: string;
+}
+/**
+ * 第三方登录请求参数
+ */
+export interface LogginSocialParams {
+  code: string;
+  password: string;
+}
+/**
+ * 密码修改参数
+ */
+export interface PasswordChangeParams {
+  oldPassword: string;
+  newPassword: string;
+}

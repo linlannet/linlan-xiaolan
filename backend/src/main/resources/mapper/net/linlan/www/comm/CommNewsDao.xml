@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    xiaolan-backend - 小览生活服务端
+    Copyright © 2020-2025 Linlan (open@linlan.net)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.linlan.www.comm.dao.CommNewsDao">
+
+    <resultMap id="BaseResultMap" type="net.linlan.www.comm.entity.CommNews">
+        <id column="ID" property="id" />
+        <result column="TITLE" property="title" />
+        <result column="SUMMARY" property="summary" />
+        <result column="CONTENT" property="content" />
+        <result column="COVER_IMAGE" property="coverImage" />
+        <result column="PUBLISH_DATE" property="publishDate" />
+        <result column="SORT" property="sort" />
+        <result column="STATUS" property="status" />
+        <result column="DEL_FLAG" property="delFlag" />
+        <result column="CREATE_TIME" property="createTime" />
+        <result column="UPDATE_TIME" property="updateTime" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        ID, TITLE, SUMMARY, CONTENT, COVER_IMAGE, PUBLISH_DATE, SORT, STATUS, DEL_FLAG, CREATE_TIME, UPDATE_TIME
+    </sql>
+
+    <select id="getList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM COMM_NEWS
+        WHERE DEL_FLAG = 0
+        <if test="title != null and title != ''">
+            AND TITLE LIKE CONCAT('%', #{title}, '%')
+        </if>
+        <if test="status != null">
+            AND STATUS = #{status}
+        </if>
+        ORDER BY SORT ASC, CREATE_TIME DESC
+    </select>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM COMM_NEWS
+        WHERE ID = #{id} AND DEL_FLAG = 0
+    </select>
+
+    <insert id="save" parameterType="net.linlan.www.comm.entity.CommNews" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO COMM_NEWS (TITLE, SUMMARY, CONTENT, COVER_IMAGE, PUBLISH_DATE, SORT, STATUS, DEL_FLAG, CREATE_TIME, UPDATE_TIME)
+        VALUES (#{title}, #{summary}, #{content}, #{coverImage}, #{publishDate}, #{sort}, #{status}, 0, NOW(), NOW())
+    </insert>
+
+    <update id="update" parameterType="net.linlan.www.comm.entity.CommNews">
+        UPDATE COMM_NEWS
+        <set>
+            <if test="title != null">TITLE = #{title},</if>
+            <if test="summary != null">SUMMARY = #{summary},</if>
+            <if test="content != null">CONTENT = #{content},</if>
+            <if test="coverImage != null">COVER_IMAGE = #{coverImage},</if>
+            <if test="publishDate != null">PUBLISH_DATE = #{publishDate},</if>
+            <if test="sort != null">SORT = #{sort},</if>
+            <if test="status != null">STATUS = #{status},</if>
+            UPDATE_TIME = NOW()
+        </set>
+        WHERE ID = #{id}
+    </update>
+
+    <delete id="deleteById">
+        UPDATE COMM_NEWS SET DEL_FLAG = 1 WHERE ID = #{id}
+    </delete>
+
+    <delete id="deleteByIds">
+        UPDATE COMM_NEWS SET DEL_FLAG = 1 WHERE ID IN
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="getCount" resultType="int">
+        SELECT COUNT(*) FROM COMM_NEWS WHERE DEL_FLAG = 0
+        <if test="title != null and title != ''">
+            AND TITLE LIKE CONCAT('%', #{title}, '%')
+        </if>
+    </select>
+
+</mapper>

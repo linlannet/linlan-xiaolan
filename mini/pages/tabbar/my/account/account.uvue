@@ -1,0 +1,158 @@
+<template>
+  <view class="fui-wrap">
+    <!-- 头部区域 - 双层次渐变卡片设计 -->
+    <view class="header-container">
+      <view class="header-card">
+        <view class="header-content">
+          <fui-icon name="coupon-fill" size="44" color="#ffffff" class="header-icon" />
+          <text class="header-title">账本管理</text>
+        </view>
+        <fui-button btnSize="mini" type="primary" :size="38" text="新增账本" @onclick="navigateToAddAccount" class="add-btn" />
+      </view>
+    </view>
+
+    <!-- 账本列表 -->
+    <view class="account-list">
+      <view class="account-item" v-for="(account, index) in accounts" :key="index">
+        <text class="account-name">{{ account.name }}</text>
+        <view class="account-actions">
+          <fui-button btnSize="mini" type="warning" :size="24" text="编辑" @onclick="handleEdit(index)" class="edit-btn" />
+          <fui-button btnSize="mini" type="danger" :size="24" text="删除" @onclick="handleDelete(index)" class="delete-btn" />
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      accounts: []
+    };
+  },
+  onLoad() {
+    // 从本地存储加载账本数据
+    this.accounts = uni.getStorageSync('accounts') || [];
+  },
+  methods: {
+    navigateToAddAccount() {
+      // 跳转到新增账本页面
+      uni.navigateTo({ url: '/pages/tabbar/my/account/form-account' });
+    },
+    handleEdit(index) {
+      // 编辑账本逻辑
+      const account = this.accounts[index];
+      uni.navigateTo({ url: `/pages/tabbar/my/account/form-account?id=${account.id}` });
+    },
+    handleDelete(index) {
+      // 删除账本逻辑
+      uni.showModal({
+        title: '确认删除',
+        content: '确定要删除这个账本吗？',
+        success: (res) => {
+          if (res.confirm) {
+            this.accounts.splice(index, 1);
+            // 同步更新本地存储
+            uni.setStorageSync('accounts', this.accounts);
+            uni.showToast({ title: '删除成功' });
+          }
+        }
+      });
+    }
+  }
+};
+</script>
+
+<style lang="scss">
+// 双层次渐变卡片头部设计
+.header-container {
+  padding: 30rpx;
+  background-color: #f0f2ff;
+}
+
+.header-card {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #ffffff 0%, #f5f7ff 100%);
+  border-radius: 32rpx;
+  padding: 44rpx;
+  box-shadow: 0 16rpx 40rpx rgba(70, 92, 255, 0.15);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.header-card:hover {
+  transform: translateY(-6rpx);
+  box-shadow: 0 20rpx 48rpx rgba(70, 92, 255, 0.2);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+}
+
+.header-icon {
+  margin-right: 24rpx;
+  background: linear-gradient(135deg, #465cff 0%, #7b61ff 100%);
+  padding: 18rpx;
+  border-radius: 18rpx;
+  box-shadow: 0 6rpx 16rpx rgba(70, 92, 255, 0.25);
+}
+
+.header-title {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #222836;
+  letter-spacing: 0.8rpx;
+}
+
+.add-btn {
+  background: linear-gradient(135deg, #465cff 0%, #7b61ff 100%);
+  color: #ffffff;
+  border-radius: 44rpx;
+  padding: 0 44rpx;
+  box-shadow: 0 8rpx 20rpx rgba(70, 92, 255, 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.add-btn:hover {
+  transform: translateY(-4rpx);
+  box-shadow: 0 12rpx 28rpx rgba(70, 92, 255, 0.3);
+}
+
+.add-btn:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 6rpx 16rpx rgba(70, 92, 255, 0.2);
+}
+
+.account-list {
+  padding: 32rpx;
+}
+
+.account-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx;
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.account-name {
+  font-size: 32rpx;
+  color: #333333;
+}
+
+.account-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.edit-btn, .delete-btn {
+  padding: 0 20rpx;
+}
+</style>

@@ -1,0 +1,47 @@
+import request from '@/utils/request.uts';
+import type { CheckRecord } from '@/api/types/finance.d.uts';
+
+/**
+ * 新增记账打卡记录
+ * @param data 记账打卡记录数据
+ * @returns 新增结果
+ */
+export function addCheckRecord(data: Partial<CheckRecord>): Promise<any> {
+  return request.post('/api/my/checkrecord/save',data);
+}
+
+/**
+ * 获取记账打卡记录列表
+ * @param params 查询参数
+ * @returns 记录列表
+ */
+export function getCheckRecords(params?: any): Promise<any> {
+  return request.get('/api/my/checkrecord/list',params);
+}
+
+/**
+ * 获取记账打卡记录详情
+ * @param id 记录ID
+ * @returns 记录详情
+ */
+export function getCheckRecordDetail(id: number): Promise<any> {
+  return request.get(`/api/my/checkrecord/${id}`);
+}
+
+/**
+ * 更新记账打卡记录
+ * @param data 记录数据
+ * @returns 更新结果
+ */
+export function updateCheckRecord(data: CheckRecord): Promise<any> {
+  return request.post('/api/my/checkrecord/update',data);
+}
+
+/**
+ * 删除记账打卡记录
+ * @param ids 记录ID列表
+ * @returns 删除结果
+ */
+export function deleteCheckRecords(ids: number[]): Promise<any> {
+  return request.post(`/api/my/checkrecord/delete/${ids.join(',')}`);
+}

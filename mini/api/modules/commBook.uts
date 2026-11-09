@@ -1,0 +1,62 @@
+import api from '@/utils/request.uts';
+import type { CommBook, CommBookListParams, CommBookDetailParams } from '@/api/types/commBook.d.uts';
+
+/**
+ * 获取公共记账本列表
+ * @param params 查询参数
+ * @returns 记账本列表数据
+ */
+export const getCommBookList = (params?: CommBookListParams) => {
+  return api.get<CommBook[]>('/api/comm/book/list', params, {
+    showLoading: true,
+    loadingText: '加载中...'
+  });
+};
+
+/**
+ * 获取公共记账本详情
+ * @param id 记账本ID
+ * @returns 记账本详情数据
+ */
+export const getCommBookDetail = (id: number) => {
+  return api.get<CommBook>(`/api/comm/book/${id}`, {}, {
+    showLoading: true,
+    loadingText: '加载中...'
+  });
+};
+
+/**
+ * 新增公共记账本
+ * @param data 记账本数据
+ * @returns 操作结果
+ */
+export const addCommBook = (data: Partial<CommBook>) => {
+  return api.post<string>('/api/comm/book/save', { data }, {
+    showLoading: true,
+    loadingText: '保存中...'
+  });
+};
+
+/**
+ * 修改公共记账本
+ * @param data 记账本数据
+ * @returns 操作结果
+ */
+export const updateCommBook = (data: Partial<CommBook>) => {
+  return api.post<string>('/api/comm/book/update', { data }, {
+    showLoading: true,
+    loadingText: '更新中...'
+  });
+};
+
+/**
+ * 删除公共记账本
+ * @param ids 记账本ID数组
+ * @returns 操作结果
+ */
+export const deleteCommBook = (ids: number[]) => {
+  return api.post<string>(`/api/comm/book/delete/${ids.join(',')}`, {}, {
+    showLoading: true,
+    loadingText: '删除中...'
+  });
+};

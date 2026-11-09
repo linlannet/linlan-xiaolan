@@ -1,0 +1,99 @@
+<template>
+	<!-- #ifdef APP -->
+	<scroll-view style="flex:1">
+	<!-- #endif -->
+		<view class="fui-wrap">
+			<view class="fui-page__hd">
+				<text class="fui-page__title">Animation</text>
+				<text class="fui-page__desc">Animation 动画，过渡效果。</text>
+			</view>
+			<view class="fui-page__bd fui-page__spacing">
+				<fui-button type="gray" btn-size="medium" text="Fade" :bold="true" margin="24rpx 0"
+					@onclick="ani(['fade'], true)"></fui-button>
+				<fui-button type="gray" btn-size="medium" text="Slide Top" :bold="true"
+					@onclick="ani(['slide-top'],false)">
+				</fui-button>
+				<fui-button type="gray" btn-size="medium" text="Slide Left" :bold="true" margin="24rpx 0"
+					@onclick="ani(['slide-left'],false)">
+				</fui-button>
+				<fui-button type="gray" btn-size="medium" text="Slide Right" :bold="true"
+					@onclick="ani(['slide-right'],false)">
+				</fui-button>
+				<fui-button type="gray" btn-size="medium" text="Slide Bottom" :bold="true" margin="24rpx 0"
+					@onclick="ani(['slide-bottom'],false)">
+				</fui-button>
+				<fui-button type="gray" btn-size="medium" text="Zoom In" :bold="true"
+					@onclick="ani(['zoom-in', 'fade'],false)">
+				</fui-button>
+				<fui-button type="gray" btn-size="medium" text="Zoom Out" :bold="true" margin="24rpx 0"
+					@onclick="ani(['zoom-out', 'fade'],false)"></fui-button>
+				<fui-button type="gray" btn-size="medium" text="Custom" :bold="true"
+					@onclick="ani(['slide-left','slide-top','fade'],false)"></fui-button>
+			</view>
+			<fui-animation :duration="500" :animationType="mode" :styles="styles" :visible="isShow"
+				@onclick="handleClick" @change="change">
+				<view class="fui-ani__box fui-flex__center">
+					<fui-text text="FirstUI" color="#fff"></fui-text>
+				</view>
+			</fui-animation>
+		</view>
+	<!-- #ifdef APP -->
+	</scroll-view>
+	<!-- #endif -->
+</template>
+
+<script>
+	export default {
+		data() {
+			return {
+				isShow: false,
+				mode: ['fade'] as string[],
+				styles: {} as UTSJSONObject
+			}
+		},
+		onReady() {
+			//初始化显示动画，需在onReady之后
+			// this.ani(['slide-top'], false)
+		},
+		methods: {
+			ani(mode : string[], mask : boolean) {
+				if (mask) {
+					this.styles['background-color'] = 'rgba(0,0,0,0.6)';
+				} else {
+					this.styles['background-color'] = 'rgba(0,0,0,0)';
+				}
+
+				//如果两次设置的动画效果一致则直接显示
+				if (JSON.stringify(mode) == JSON.stringify(this.mode)) {
+					this.isShow = !this.isShow;
+				} else {
+					this.mode = mode;
+					setTimeout(() => {
+						this.isShow = !this.isShow;
+					}, 50)
+				}
+			},
+			handleClick() {
+				this.isShow = false;
+			},
+			change(visible : boolean) {
+				console.log(visible);
+			}
+		}
+	}
+</script>
+
+<style>
+	.fui-page__bd {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-direction: column;
+	}
+
+	.fui-ani__box {
+		width: 240rpx;
+		height: 240rpx;
+		background-color: #6831FF;
+	}
+</style>

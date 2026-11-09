@@ -1,0 +1,394 @@
+<template>
+  <view class="fui-wrap">
+    <!-- 头部区域 - 双层次渐变卡片设计 -->
+    <view class="header-container">
+      <view class="header-card">
+        <view class="header-content">
+          <fui-icon name="coupon-fill" size="44" color="#ffffff" class="header-icon" />
+          <text class="header-title">心愿管理</text>
+        </view>
+        <fui-button btnSize="mini" type="primary" :size="38" text="新增心愿" @onclick="navigateToAddWish" class="add-btn" />
+      </view>
+    </view>
+
+    <!-- 装饰性分隔线 -->
+    <view class="header-divider"></view>
+
+    <view class="wave-shape"></view>
+
+
+    <!-- 心愿列表 -->
+    <view class="wish-list">
+      <view v-for="(wish, index) in wishList" :key="wish.id" class="wish-card">
+        <view class="wish-status" :class="{'completed': wish.completed}"></view>
+        <view class="wish-content">
+          <view class="wish-header">
+            <text class="wish-title">{{ wish.title }}</text>
+          </view>
+          <text class="wish-description">{{ wish.description }}</text>
+          <view class="progress-section">
+            <view class="progress-info">
+              <text class="progress-label">完成进度</text>
+              <text class="progress-value">{{ wish.progress }}%</text>
+            </view>
+            <view class="progress-container">
+              <view class="progress-bar" :style="{ width: wish.progress + '%', backgroundColor: getProgressColor(wish.progress) }"></view>
+            </view>
+          </view>
+          <view class="wish-actions">
+            <view>
+              <fui-button btnSize="mini" type="warning" :size="24" text="编辑" @onclick="handleEdit(index)" class="edit-btn" />
+            </view>
+            <view>
+              <fui-button btnSize="mini" type="danger" :size="24" text="删除" @onclick="handleDelete(index)" class="delete-btn" />
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 空状态 -->
+      <!-- <fui-empty v-if="wishList.length === 0" text="暂无心愿计划" class="empty-state" /> -->
+    </view>
+  </view>
+</template>
+
+<script lang="uts">
+import { ref, onMounted } from 'vue'
+import fui from '@/common/fui-app.uts'
+
+export default {
+  setup() {
+    // 心愿列表数据
+    //const wishList = ref([])
+    const wishList = ref(JSON.parse(uni.getStorageSync('wishes') || JSON.stringify([
+      { id: 1, title: '学习Vue3', description: '掌握组合式API和响应式原理', completed: false, progress: 30 },
+      { id: 2, title: '每周阅读一本书', description: '提升知识储备和思维能力', completed: true, progress: 100 },
+      { id: 3, title: '坚持健身', description: '每周至少锻炼3次，每次1小时', completed: false, progress: 45 },
+      { id: 4, title: '学习英语', description: '达到雅思6.5分水平', completed: false, progress: 20 }
+    ])));
+    // 从本地存储加载心愿数据
+    const loadWishes = () => {
+        const keys = uni.getStorageInfoSync().keys
+        const wishes = []
+        keys.forEach(key => {
+            if (key.startsWith('wish_')) {
+                wishes.push(uni.getStorageSync(key))
+            }
+        })
+        wishList.value = wishes
+    }
+
+    // 新增心愿
+    const navigateToAddWish = () => {
+        uni.navigateTo({
+            url: '/pages/tabbar/my/wish/add-wish'
+        })
+    }
+
+    // 编辑心愿
+    const handleEdit = (index) => {
+        const wish = wishList.value[index]
+        uni.navigateTo({
+            url: `/pages/tabbar/my/wish/add-wish?id=${wish.id}`
+        })
+    }
+
+    // 删除心愿
+    const handleDelete = (index) => {
+        const wish = wishList.value[index]
+        fui.modal('确认删除', `确定要删除${wish.name}吗?`, (confirm) => {
+            if (confirm) {
+                uni.removeStorageSync(`wish_${wish.id}`)
+                wishList.value.splice(index, 1)
+                fui.toast('删除成功')
+            }
+        })
+    }
+
+    // 页面加载时获取数据
+    const isAnimated = ref(false);
+
+    onMounted(() => {
+        // 页面加载动画
+        setTimeout(() => {
+            isAnimated.value = true;
+        }, 100);
+        //loadWishes()
+    })
+
+    // 计算心愿进度
+    const getProgress = (wish) => {
+      const target = Number(wish.targetAmount) || 0
+      const initial = Number(wish.initialAmount) || 0
+      return target > 0 ? Math.min(Math.round((initial / target) * 100), 100) : 0
+    }
+
+    // 计算进度条颜色
+    const getProgressColor = (progress) => {
+      if (progress >= 100) return '#4cd964';
+      if (progress >= 60) return '#5ac8fa';
+      if (progress >= 30) return '#ffcc00';
+      return '#ff9500';
+    }
+
+    return {
+        wishList,
+        navigateToAddWish,
+        handleEdit,
+        handleDelete,
+        getProgress,
+        getProgressColor,
+        isAnimated
+    }
+  }
+}
+</script>
+
+<style lang="scss">
+// 双层次渐变卡片头部设计
+.header-container {
+  padding: 30rpx;
+  background-color: #f0f2ff;
+}
+
+.header-card {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #ffffff 0%, #f5f7ff 100%);
+  border-radius: 32rpx;
+  padding: 44rpx;
+  box-shadow: 0 16rpx 40rpx rgba(70, 92, 255, 0.15);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.header-card:hover {
+  transform: translateY(-6rpx);
+  box-shadow: 0 20rpx 48rpx rgba(70, 92, 255, 0.2);
+}
+
+.header-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.header-icon {
+  margin-right: 24rpx;
+  background: linear-gradient(135deg, #465cff 0%, #7b61ff 100%);
+  padding: 20rpx;
+  border-radius: 20rpx;
+  box-shadow: 0 6rpx 16rpx rgba(70, 92, 255, 0.25);
+}
+
+.header-title {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #222836;
+  letter-spacing: 0.8rpx;
+}
+
+.add-btn {
+  background: linear-gradient(135deg, #465cff 0%, #7b61ff 100%);
+  color: #ffffff;
+  border-radius: 44rpx;
+  padding: 0 44rpx;
+  box-shadow: 0 8rpx 20rpx rgba(70, 92, 255, 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.add-btn:hover {
+  transform: translateY(-4rpx);
+  box-shadow: 0 12rpx 28rpx rgba(70, 92, 255, 0.3);
+}
+
+.add-btn:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 6rpx 16rpx rgba(70, 92, 255, 0.2);
+}
+
+// 删除装饰性分隔线样式
+.header-divider {
+  display: none;
+}
+
+// 按钮全新设计
+.add-btn {
+  background-color: #ffffff;
+  color: #465cff;
+  border-radius: 50rpx;
+  padding: 0 44rpx;
+  font-weight: 500;
+  box-shadow: 0 6rpx 16rpx rgba(70, 92, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.add-btn:hover {
+  transform: translateY(-4rpx);
+  box-shadow: 0 10rpx 24rpx rgba(70, 92, 255, 0.28);
+}
+
+.add-btn:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 4rpx 10rpx rgba(70, 92, 255, 0.2);
+}
+
+// 删除波浪形状相关样式
+.wave-shape {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60rpx;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23ffffff' fill-opacity='0.9' d='M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,213.3C672,224,768,224,864,202.7C960,181,1056,139,1152,133.3C1248,128,1344,160,1392,176L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+  background-size: 100% 60rpx;
+  background-repeat: no-repeat;
+  animation: waveMove 8s linear infinite;
+}
+
+@keyframes waveMove {
+  0% {
+    background-position-x: 0;
+  }
+  100% {
+    background-position-x: 1440px;
+  }
+}
+.wish-list {
+  padding: 0 32rpx;
+}
+
+.wish-card {
+  background-color: #ffffff;
+  border-radius: 20rpx;
+  margin-bottom: 28rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.wish-card:hover {
+  transform: translateY(-4rpx);
+  box-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.1);
+}
+
+.wish-status {
+  width: 8rpx;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.wish-status.completed {
+  background-color: #4cd964;
+}
+
+.wish-content {
+  padding: 32rpx;
+  margin-left: 8rpx;
+}
+
+.wish-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20rpx;
+}
+
+.wish-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #333333;
+  max-width: 600rpx;
+  line-height: 1.4;
+}
+
+.wish-description {
+  font-size: 28rpx;
+  color: #666666;
+  line-height: 1.6;
+  margin-bottom: 28rpx;
+  padding-bottom: 28rpx;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.progress-section {
+  padding-top: 20rpx;
+}
+
+.progress-info {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.progress-label {
+  font-size: 26rpx;
+  color: #888888;
+}
+
+.progress-value {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #465cff;
+}
+
+.progress-container {
+  height: 16rpx;
+  background-color: #f0f2f5;
+  border-radius: 8rpx;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 8rpx;
+  transition: width 0.6s ease;
+}
+
+.wish-actions {
+  display: flex;
+  gap: 16rpx;
+  flex-direction: row;
+  text-align: right;
+  justify-content: flex-end;
+  margin-top: 32rpx;
+}
+
+.edit-btn {
+  color: #465cff;
+  font-size: 26rpx;
+}
+
+.delete-btn {
+  color: #ff5252;
+  font-size: 26rpx;
+}
+
+.add-btn {
+  background-color: #ffffff;
+  color: #465cff;
+  border-radius: 50rpx;
+  padding: 0 40rpx;
+  box-shadow: 0 6rpx 16rpx rgba(70, 92, 255, 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.add-btn:hover {
+  transform: translateY(-3rpx);
+  box-shadow: 0 8rpx 20rpx rgba(70, 92, 255, 0.3);
+}
+
+.add-btn:active {
+  transform: translateY(1rpx);
+  box-shadow: 0 4rpx 12rpx rgba(70, 92, 255, 0.2);
+}
+
+.empty-state {
+  margin-top: 200rpx;
+}
+</style>

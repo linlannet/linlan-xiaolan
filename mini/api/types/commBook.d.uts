@@ -1,0 +1,51 @@
+/**
+ * 公共记账本类型定义
+ */
+export interface CommBook {
+  creatorId: string;
+  createTime: string;
+  lastTime: string;
+  id: number;
+  templateId: string;
+  type: string;
+  name: string;
+  code: string;
+  status: string;
+  priority: number;
+  creatorName: string;
+  delFlag: number;
+  description: string;
+  spare1: string;
+  spare2: string;
+}
+
+/**
+ * 公共记账本列表查询参数
+ */
+export interface CommBookListParams {
+  q?: string;
+  orderBy?: number;
+  startTime?: string;
+  endTime?: string;
+  page?: number;
+  limit?: number;
+  id?: number;
+  templateId?: string;
+  type?: string;
+  name?: string;
+  code?: string;
+  status?: string;
+  creatorId?: string;
+  creatorName?: string;
+  delFlag?: number;
+  description?: string;
+  spare1?: string;
+  spare2?: string;
+}
+
+/**
+ * 公共记账本详情查询参数
+ */
+export interface CommBookDetailParams {
+  id: number;
+}

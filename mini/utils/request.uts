@@ -1,0 +1,254 @@
+import { getRequestEnv, resolveRequestUrl } from './config.uts'
+
+export interface RequestOptions {
+  url: string
+  method?: string
+  data?: any
+  headers?: Record<string, string>
+  showLoading?: boolean
+  loadingText?: string
+  toastError?: boolean
+  withToken?: boolean
+}
+
+export interface ApiResponse<T> {
+  code: number
+  msg: string
+  data: T
+}
+
+export interface RequestHooks {
+  onUnauthorized?: (message: string, code: number) => void
+  onError?: (message: string, code: number) => void
+  encryptRequest?: (body: string) => string
+  decryptResponse?: (body: string) => string
+}
+
+let requestHooks: RequestHooks | null = null
+
+export function setRequestHooks(hooks: RequestHooks): void {
+  requestHooks = hooks
+}
+
+function isSuccess(code: number): boolean {
+  const codes = getRequestEnv().successCodes
+  for (let i = 0; i < codes.length; i++) {
+    if (codes[i] == code) return true
+  }
+  return false
+}
+
+function getToken(): string {
+  const value = uni.getStorageSync(getRequestEnv().tokenKey)
+  if (value == null || value == undefined) return ''
+  return value as string
+}
+
+function buildHeader(headers: Record<string, string> | null, withToken: boolean): Record<string, string> {
+  const result: Record<string, string> = {
+    'Content-Type': 'application/json'
+  }
+  if (headers != null) {
+    const source = headers as Record<string, string>
+    const keys = Object.keys(source)
+    for (let i = 0; i < keys.length; i++) {
+      result[keys[i]] = source[keys[i]]
+    }
+  }
+  if (withToken) {
+    const token = getToken()
+    if (token.length > 0) {
+      const scheme = getRequestEnv().tokenScheme
+      result['Authorization'] = scheme.length > 0 ? scheme + ' ' + token : token
+    }
+  }
+  return result
+}
+
+function redirectToLogin(): void {
+  const pages = getCurrentPages()
+  let current = ''
+  if (pages.length > 0) {
+    current = '/' + pages[pages.length - 1].route
+  }
+  const loginPage = getRequestEnv().loginPage
+  let url = loginPage
+  if (current.length > 0) {
+    url = loginPage + '?redirect=' + encodeURIComponent(current)
+  }
+  uni.reLaunch({
+    url: url
+  })
+}
+
+class Request {
+  async request<T>(options: RequestOptions): Promise<ApiResponse<T>> {
+    let method = 'GET'
+    if (options.method != null) method = options.method as string
+    let showLoading = true
+    if (options.showLoading != null) showLoading = options.showLoading as boolean
+    let loadingText = '加载中...'
+    if (options.loadingText != null) loadingText = options.loadingText as string
+    let toastError = true
+    if (options.toastError != null) toastError = options.toastError as boolean
+    let withToken = true
+    if (options.withToken != null) withToken = options.withToken as boolean
+
+    let url = resolveRequestUrl(options.url)
+    let headerInput: Record<string, string> | null = null
+    if (options.headers != null) headerInput = options.headers as Record<string, string>
+    const headers = buildHeader(headerInput, withToken)
+
+    let data = options.data
+    if (method == 'GET') {
+      const joiner = url.indexOf('?') > -1 ? '&' : '?'
+      url = url + joiner + 't=' + Date.now()
+    } else if (data != null && requestHooks != null) {
+      const hooks = requestHooks as RequestHooks
+      if (hooks.encryptRequest != null) {
+        const body = typeof data == 'string' ? data as string : JSON.stringify(data)
+        data = hooks.encryptRequest(body)
+      }
+    }
+
+    if (showLoading) {
+      uni.showLoading({
+        title: loadingText,
+        mask: false
+      })
+    }
+
+    try {
+      const response = await uni.request<ApiResponse<T>>({
+        url: url,
+        method: method,
+        data: data,
+        header: headers,
+        timeout: getRequestEnv().timeout
+      })
+
+      let body = response.data
+      if (typeof body == 'string' && requestHooks != null) {
+        const hooks = requestHooks as RequestHooks
+        if (hooks.decryptResponse != null) {
+          const decrypted = hooks.decryptResponse(body as string)
+          body = JSON.parse(decrypted) as ApiResponse<T>
+        }
+      }
+
+      if (body == null) {
+        throw new Error('服务端返回数据为空')
+      }
+
+      if (!isSuccess(body.code)) {
+        const message = body.msg != null && body.msg.length > 0 ? body.msg : '操作失败，请稍后重试'
+        const code = body.code
+        if (code == 401) {
+          if (requestHooks != null) {
+            const hooks = requestHooks as RequestHooks
+            if (hooks.onUnauthorized != null) {
+              hooks.onUnauthorized(message, code)
+            } else {
+              uni.removeStorageSync(getRequestEnv().tokenKey)
+              redirectToLogin()
+            }
+          } else {
+            uni.removeStorageSync(getRequestEnv().tokenKey)
+            redirectToLogin()
+          }
+        } else if (requestHooks != null) {
+          const hooks = requestHooks as RequestHooks
+          if (hooks.onError != null) {
+            hooks.onError(message, code)
+          }
+        }
+        if (toastError) {
+          uni.showToast({
+            title: message,
+            icon: 'none'
+          })
+        }
+        throw new Error(message)
+      }
+
+      return body
+    } catch (error) {
+      const message = error == null ? '网络异常，请稍后重试' : (error as Error).message
+      if (requestHooks != null) {
+        const hooks = requestHooks as RequestHooks
+        if (hooks.onError != null) {
+          hooks.onError(message, -1)
+        }
+      }
+      if (toastError) {
+        uni.showToast({
+          title: message,
+          icon: 'none'
+        })
+      }
+      throw error
+    } finally {
+      if (showLoading) {
+        uni.hideLoading()
+      }
+    }
+  }
+
+  get<T>(url: string, params?: any, options?: RequestOptions): Promise<ApiResponse<T>> {
+    const requestOptions: RequestOptions = {
+      url: url,
+      method: 'GET',
+      data: params
+    }
+    if (options != null) {
+      requestOptions.showLoading = options.showLoading
+      requestOptions.loadingText = options.loadingText
+      requestOptions.toastError = options.toastError
+      requestOptions.withToken = options.withToken
+    }
+    return this.request<T>(requestOptions)
+  }
+
+  post<T>(url: string, data?: any, options?: RequestOptions): Promise<ApiResponse<T>> {
+    const requestOptions: RequestOptions = {
+      url: url,
+      method: 'POST',
+      data: data
+    }
+    if (options != null) {
+      requestOptions.showLoading = options.showLoading
+      requestOptions.loadingText = options.loadingText
+      requestOptions.toastError = options.toastError
+      requestOptions.withToken = options.withToken
+    }
+    return this.request<T>(requestOptions)
+  }
+
+  upload<T>(url: string, filePath: string, options?: RequestOptions): Promise<ApiResponse<T>> {
+    const token = getToken()
+    const headers = buildHeader(null, true)
+    return new Promise<ApiResponse<T>>((resolve, reject) => {
+      uni.uploadFile({
+        url: resolveRequestUrl(url),
+        filePath: filePath,
+        name: 'file',
+        header: headers,
+        success: (response: any) => {
+          const body = JSON.parse(response.data) as ApiResponse<T>
+          if (isSuccess(body.code)) {
+            resolve(body)
+          } else {
+            reject(new Error(body.msg))
+          }
+        },
+        fail: (error: any) => {
+          reject(new Error(error.errMsg))
+        }
+      })
+    })
+  }
+}
+
+export const request = new Request()
+export const api = request
+export default request

@@ -1,0 +1,19 @@
+import App from './App.uvue';
+import fui from './common/fui-app';
+import appConfig from '@/config';
+import { initRequestEnv } from '@/utils/request.uts';
+
+import { createSSRApp } from 'vue';
+
+export function createApp() {
+	initRequestEnv(appConfig.env.API_BASE_URL)
+	const app = createSSRApp(App);
+	//以下代码需要开发工具升级至 Hbuilder x 3.9.9+ (正式版本如果没有则下载alpha版本)
+	app.use(function (app) {
+		app.config.globalProperties.fui = fui;
+	});
+
+	return {
+		app
+	}
+}

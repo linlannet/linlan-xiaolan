@@ -1,0 +1,33 @@
+// 移除 appConfig 导入
+import request from '@/utils/request.uts';
+import type { LoginParams, LogginSocialParams, UserInfo } from '@/api/types/user.d.uts';
+
+/**
+ * 用户登录
+ * @param params 登录参数
+ */
+export const login = async (params: LoginParams): Promise<UserInfo> => {
+  return request.post('/api/auth/login', params); // 直接使用字符串路径
+};
+
+/**
+ * 小程序登录
+ * @param code 登录凭证
+ */
+export const miniLogin = async (code: string): Promise<UserInfo> => {
+    return request.get(`/api/open/wxmini/login/${code}`,{});
+}
+
+/**
+ * 用户退出登录
+ */
+export const logout = async (): Promise<boolean> => {
+  return request.post('/api/auth/logout'); // 直接使用字符串路径
+};
+
+/**
+ * 获取当前登录用户信息
+ */
+export const getCurrentUser = async (): Promise<UserInfo> => {
+  return request.get('/api/user/info'); // 直接使用字符串路径
+};

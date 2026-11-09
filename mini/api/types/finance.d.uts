@@ -1,0 +1,49 @@
+/**
+ * 记账打卡记录接口定义
+ */
+export interface CheckRecord {
+  /** 记账打卡主键ID */
+  id?: number;
+  /** 创建人id */
+  creatorId?: string;
+  /** 创建时间 */
+  createTime?: string;
+  /** 最后修改时间 */
+  lastTime?: string;
+  /** 分类主键ID */
+  categoryId?: number;
+  /** 分类名称 */
+  categoryName?: string;
+  /** 主键ID */
+  infoId?: number;
+  /** 记账本台账名称 */
+  bookName?: string;
+  /** 心愿目标主键ID */
+  wishId?: number;
+  /** 心愿目标名称 */
+  wishName?: string;
+  /** 主键ID */
+  memberId?: number;
+  /** 创建者显示名称 */
+  viewName?: string;
+  /** 记账打卡类型，JIZHANG记账，MUBIAO目标 */
+  type?: 'JIZHANG' | 'MUBIAO';
+  /** 记账打卡类型，ZHICHU支出，SHOURU收入，DAKA打卡 */
+  bizType?: 'ZHICHU' | 'SHOURU' | 'DAKA';
+  /** 记账打卡名称 */
+  name?: string;
+  /** 记账打卡代码 */
+  code?: string;
+  /** 记账打卡配置JSON */
+  content?: string;
+  /** 状态，0异常关闭1正常2升级3锁定 */
+  status?: string;
+  /** 排序 */
+  priority?: number;
+  /** 描述 */
+  description?: string;
+  /** 备用1 */
+  spare1?: string;
+  /** 备用2 */
+  spare2?: string;
+}

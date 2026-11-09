@@ -1,0 +1,205 @@
+<template>
+  <view class="fui-wrap">
+    <view class="fui-page__hd">
+      <text class="fui-page__title">{{ isEditMode ? '编辑心愿' : '新增心愿' }}</text>
+      <text class="fui-page__desc">{{ isEditMode ? '修改您的心愿计划和目标' : '设置您的心愿计划和目标' }}</text>
+    </view>
+    <view class="fui-page__body">
+      <uni-forms ref="wishForm" :modelValue="wishFormData">
+        <!-- 心愿名称 -->
+        <uni-forms-item label="心愿名称" required>
+          <uni-easyinput v-model="wishFormData.name" placeholder="请输入心愿名称" />
+        </uni-forms-item>
+
+        <!-- 截止日期 -->
+        <uni-forms-item label="截止日期" required>
+          <uni-datetime-picker type="date" v-model="wishFormData.deadline" :clear-icon="false" />
+        </uni-forms-item>
+
+        <!-- 目标金额 -->
+        <uni-forms-item label="目标金额" required>
+          <uni-easyinput type="number" v-model="wishFormData.targetAmount" placeholder="0.00" />
+        </uni-forms-item>
+
+        <!-- 期初金额 -->
+        <uni-forms-item label="期初金额">
+          <uni-easyinput type="number" v-model="wishFormData.initialAmount" placeholder="0.00" />
+        </uni-forms-item>
+
+        <!-- 绑定账本 -->
+        <uni-forms-item label="绑定账本" required>
+          <picker @change="handleBookChange" :value="wishFormData.bookId" :range="bookList">
+            <view class="uni-input">{{ bookList[wishFormData.bookId] || '请选择账本' }}</view>
+          </picker>
+        </uni-forms-item>
+
+        <!-- 周末是否例外 -->
+        <uni-forms-item label="周末例外">
+          <uni-data-checkbox mode="tag" v-model="wishFormData.weekendException" :localdata="weekendOptions" />
+        </uni-forms-item>
+
+        <!-- 周期选择 -->
+        <uni-forms-item label="周期" required>
+          <uni-data-checkbox mode="segmented" v-model="wishFormData.period" :localdata="periodOptions" />
+        </uni-forms-item>
+
+        <!-- 备注 -->
+        <uni-forms-item label="备注">
+          <uni-easyinput type="textarea" v-model="wishFormData.remark" placeholder="请输入备注信息" />
+        </uni-forms-item>
+      </uni-forms>
+
+      <!-- 底部操作按钮 -->
+      <view class="submit-area">
+        <fui-button type="primary" :disabled="!canSubmit" :text="isEditMode ? '更新心愿' : '保存心愿'" @onclick="saveWish" />
+        <fui-button type="default" text="取消" @onclick="navigateBack" style="margin-top: 16rpx;" />
+      </view>
+    </view>
+  </view>
+</template>
+
+<script lang="uts">
+import { ref, reactive, computed, onMounted } from 'vue'
+import { formatDate } from '@/common/utils'
+import fui from '@/common/fui-app.uts'
+
+// 获取当前日期并格式化为yyyy-MM-dd
+const getCurrentDate = () => {
+  const date = new Date()
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+export default {
+  setup() {
+    // 判断是否为编辑模式
+    const isEditMode = ref(false)
+    const wishId = ref('')
+
+    // 账本列表
+    const bookList = ref(['默认账本', '旅行基金', '学习账户', '健身预算'])
+    // 周末例外选项
+    const weekendOptions = ref([{ text: '正常', value: 'normal' }, { text: '例外', value: 'exception' }])
+    // 周期选项
+    const periodOptions = ref([{ text: '每月', value: 'monthly' }, { text: '每周', value: 'weekly' }, { text: '每日', value: 'daily' }])
+
+    // 表单数据
+    const wishFormData = reactive({
+        name: '',
+        deadline: getCurrentDate(),
+        targetAmount: '',
+        initialAmount: '0',
+        bookId: 0,
+        weekendException: 'normal',
+        period: 'monthly',
+        remark: ''
+    })
+
+    // 页面加载时获取数据
+    onMounted(() => {
+        const pages = getCurrentPages()
+        const currentPage = pages[pages.length - 1]
+        const id = currentPage.options.id
+        if (id) {
+            isEditMode.value = true
+            wishId.value = id
+            // 从本地存储加载数据
+            const wishData = uni.getStorageSync(`wish_${id}`)
+            if (wishData) {
+                Object.assign(wishFormData, wishData)
+            }
+        }
+    })
+
+    // 保存心愿
+    const saveWish = () => {
+        if (isEditMode.value) {
+            // 更新现有心愿
+            const updatedWish = {
+                id: wishId.value,
+                ...wishFormData
+            }
+            uni.setStorageSync(`wish_${wishId.value}`, updatedWish)
+            fui.toast('心愿更新成功')
+        } else {
+            // 创建新心愿
+            const newWishId = Date.now().toString()
+            const newWish = {
+                id: newWishId,
+                ...wishFormData
+            }
+            uni.setStorageSync(`wish_${newWishId}`, newWish)
+            fui.toast('心愿保存成功')
+        }
+        uni.navigateBack()
+    }
+
+    // 提交状态判断
+    const canSubmit = computed(() => {
+      return wishFormData.name && wishFormData.targetAmount && !isNaN(Number(wishFormData.targetAmount)) && Number(wishFormData.targetAmount) > 0
+    })
+
+    // 账本选择变化
+    const handleBookChange = (e: any) => {
+      wishFormData.bookId = e.detail.value
+    }
+
+    // 返回上一页
+    const navigateBack = () => {
+      uni.navigateBack()
+    }
+
+    return {
+      wishFormData,
+      bookList,
+      weekendOptions,
+      periodOptions,
+      canSubmit,
+      handleBookChange,
+      saveWish,
+      navigateBack,
+      isEditMode
+    }
+  }
+}
+</script>
+
+<style lang="scss">
+.fui-page__hd {
+  padding: 32rpx;
+  text-align: center;
+}
+
+.fui-page__title {
+  font-size: 36rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+}
+
+.fui-page__desc {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.fui-page__body {
+  padding: 32rpx;
+  background-color: #fff;
+}
+
+.submit-area {
+  margin-top: 48rpx;
+  padding: 0 32rpx;
+}
+
+/* 表单样式覆盖 */
+:deep(.uni-forms-item) {
+  margin-bottom: 32rpx;
+}
+
+:deep(.uni-easyinput) {
+  height: 80rpx;
+  border-radius: 16rpx;
+}
+</style>

@@ -1,0 +1,167 @@
+import { reactive } from 'vue'
+
+// 记账记录类型定义
+export type Record = {
+  id: string;
+  date: string; // 日期格式：YYYY-MM-DD
+  amount: number; // 金额
+  category: string; // 分类
+  type: 'income' | 'expense'; // 收入或支出
+  description: string; // 描述
+  createTime: number; // 创建时间戳
+}
+
+// 分类类型
+export type Category = {
+  id: string;
+  name: string;
+  icon: string;
+  type: 'income' | 'expense';
+}
+
+export type State = {
+  // 当前版本
+  version: string;
+  // 记账记录
+  records: Record[];
+  // 分类列表
+  categories: Category[];
+}
+
+// 默认分类
+const defaultCategories: Category[] = [
+  // 支出分类
+  { id: 'food', name: '餐饮', icon: 'food', type: 'expense' },
+  { id: 'transport', name: '交通', icon: 'transport', type: 'expense' },
+  { id: 'shopping', name: '购物', icon: 'shopping', type: 'expense' },
+  { id: 'entertainment', name: '娱乐', icon: 'entertainment', type: 'expense' },
+  { id: 'medical', name: '医疗', icon: 'medical', type: 'expense' },
+  { id: 'education', name: '教育', icon: 'education', type: 'expense' },
+  { id: 'housing', name: '住房', icon: 'housing', type: 'expense' },
+  { id: 'other_expense', name: '其他支出', icon: 'other', type: 'expense' },
+  // 收入分类
+  { id: 'salary', name: '工资', icon: 'salary', type: 'income' },
+  { id: 'bonus', name: '奖金', icon: 'bonus', type: 'income' },
+  { id: 'investment', name: '投资', icon: 'investment', type: 'income' },
+  { id: 'other_income', name: '其他收入', icon: 'other', type: 'income' }
+]
+
+export const state = reactive({
+  version: '1.3.0',
+  records: [],
+  categories: defaultCategories
+} as State)
+
+// 模拟数据（用于展示）
+const mockRecords: Record[] = [
+  {
+    id: '1',
+    date: '2024-05-10',
+    amount: 25.5,
+    category: 'food',
+    type: 'expense',
+    description: '午餐',
+    createTime: Date.now() - 86400000
+  },
+  {
+    id: '2',
+    date: '2024-05-10',
+    amount: 15000,
+    category: 'salary',
+    type: 'income',
+    description: '5月工资',
+    createTime: Date.now() - 172800000
+  },
+  {
+    id: '3',
+    date: '2024-05-09',
+    amount: 120,
+    category: 'shopping',
+    type: 'expense',
+    description: '日用品',
+    createTime: Date.now() - 259200000
+  }
+]
+
+// 初始化加载存储的数据
+const initRecords = () => {
+  const savedRecords = uni.getStorageSync('bookkeeping_records')
+  if (savedRecords) {
+    try {
+      state.records = JSON.parse(savedRecords)
+    } catch (e) {
+      console.error('Failed to parse saved records:', e)
+      // 如果解析失败，使用模拟数据
+      state.records = mockRecords
+    }
+  } else {
+    // 首次使用，加载模拟数据
+    state.records = mockRecords
+  }
+}
+
+// 初始化加载
+initRecords()
+
+export const setVersion = (version: string) => {
+  state.version = version
+}
+
+// 添加记账记录
+export const addRecord = (record: Omit<Record, 'id' | 'createTime'>) => {
+  const newRecord: Record = {
+    ...record,
+    id: Date.now().toString(),
+    createTime: Date.now()
+  }
+  state.records.push(newRecord)
+  // 保存到本地存储
+  uni.setStorageSync('bookkeeping_records', JSON.stringify(state.records))
+  return newRecord
+}
+
+// 更新记账记录
+export const updateRecord = (id: string, record: Partial<Record>) => {
+  const index = state.records.findIndex(r => r.id === id)
+  if (index !== -1) {
+    state.records[index] = { ...state.records[index], ...record }
+    // 保存到本地存储
+    uni.setStorageSync('bookkeeping_records', JSON.stringify(state.records))
+    return true
+  }
+  return false
+}
+
+// 删除记账记录
+export const deleteRecord = (id: string) => {
+  const index = state.records.findIndex(r => r.id === id)
+  if (index !== -1) {
+    state.records.splice(index, 1)
+    // 保存到本地存储
+    uni.setStorageSync('bookkeeping_records', JSON.stringify(state.records))
+    return true
+  }
+  return false
+}
+
+// 获取指定日期的记录
+export const getRecordsByDate = (date: string) => {
+  return state.records.filter(record => record.date === date)
+}
+
+// 获取指定月份的记录
+export const getRecordsByMonth = (year: number, month: number) => {
+  const monthStr = month.toString().padStart(2, '0')
+  const datePrefix = `${year}-${monthStr}`
+  return state.records.filter(record => record.date.startsWith(datePrefix))
+}
+
+// 获取分类信息
+export const getCategoryById = (id: string) => {
+  return state.categories.find(category => category.id === id)
+}
+
+// 获取指定类型的分类
+export const getCategoriesByType = (type: 'income' | 'expense') => {
+  return state.categories.filter(category => category.type === type)
+}
